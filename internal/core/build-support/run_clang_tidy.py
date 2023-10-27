@@ -65,20 +65,23 @@ def _check_all(cmd, filenames, ignore_checks):
             if problem_files:
                 msg = "clang-tidy suggested fixes for {}"
                 print("\n".join(map(msg.format, problem_files)))
-                # ignore thirdparty header file not found issue, such as:
-                #   error: 'fiu.h' file not found [clang-diagnostic-error]
-                cnt_info = ""
-                for line in stdout.splitlines():
-                    if any([len(re.findall(check, line)) > 0 for check in ignore_checks]):
-                        cnt_info += line.replace(" error: ", " ignore: ").decode("utf-8") + "\n"
-                    else:
-                        cnt_info += line.decode("utf-8") + "\n"
+                cnt_info = "".join(
+                    line.replace(" error: ", " ignore: ").decode("utf-8")
+                    + "\n"
+                    if any(
+                        len(re.findall(check, line)) > 0
+                        for check in ignore_checks
+                    )
+                    else line.decode("utf-8") + "\n"
+                    for line in stdout.splitlines()
+                )
                 cnt_error += _count_key(cnt_info, " error: ")
                 cnt_warning += _count_key(cnt_info, " warning: ")
                 cnt_ignore += _count_key(cnt_info, " ignore: ")
                 print(cnt_info)
-                print("clang-tidy - error: {}, warning: {}, ignore {}".
-                      format(cnt_error, cnt_warning, cnt_ignore))
+                print(
+                    f"clang-tidy - error: {cnt_error}, warning: {cnt_warning}, ignore {cnt_ignore}"
+                )
                 error = error or (cnt_error > 0 or cnt_warning > 0)
     except Exception:
         error = True
@@ -121,18 +124,13 @@ if __name__ == "__main__":
 
     exclude_globs = []
     if arguments.exclude_globs:
-        for line in open(arguments.exclude_globs):
-            exclude_globs.append(line.strip())
-
+        exclude_globs.extend(line.strip() for line in open(arguments.exclude_globs))
     ignore_checks = []
     if arguments.ignore_checks:
-        for line in open(arguments.ignore_checks):
-            ignore_checks.append(line.strip())
-
-    linted_filenames = []
-    for path in lintutils.get_sources(arguments.source_dir, exclude_globs):
-        linted_filenames.append(path)
-
+        ignore_checks.extend(line.strip() for line in open(arguments.ignore_checks))
+    linted_filenames = list(
+        lintutils.get_sources(arguments.source_dir, exclude_globs)
+    )
     if not arguments.quiet:
         msg = 'Tidying {}' if arguments.fix else 'Checking {}'
         print("\n".join(map(msg.format, linted_filenames)))

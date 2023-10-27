@@ -52,7 +52,7 @@ class TestIndexNodeScale:
             # If deploy failed and want to uninsatll mic
             # log.warning(f'Deploy {release_name} timeout and ready to uninstall')
             # mic.uninstall(release_name, namespace=constants.NAMESPACE)
-            raise MilvusException(message=f'Milvus healthy timeout 1800s')
+            raise MilvusException(message='Milvus healthy timeout 1800s')
 
         try:
             # connect
@@ -67,7 +67,7 @@ class TestIndexNodeScale:
             # insert data
             data = cf.gen_default_dataframe_data(nb)
             loop = 100
-            for i in range(loop):
+            for _ in range(loop):
                 collection_w.insert(data, timeout=60)
             assert collection_w.num_entities == nb * loop
 
@@ -103,7 +103,7 @@ class TestIndexNodeScale:
             log.info(f'Create index on {expand_replicas} indexNode cost t2: {t2}')
 
             log.debug(f't2 is {t2}, t0 is {t0}, t0/t2 is {t0 / t2}')
-            # assert round(t0 / t2) == 2
+                # assert round(t0 / t2) == 2
 
         except Exception as e:
             raise Exception(str(e))
@@ -142,7 +142,7 @@ class TestIndexNodeScale:
         if mic.wait_for_healthy(release_name, constants.NAMESPACE, timeout=1800):
             host = mic.endpoint(release_name, constants.NAMESPACE).split(':')[0]
         else:
-            raise MilvusException(message=f'Milvus healthy timeout 1800s')
+            raise MilvusException(message='Milvus healthy timeout 1800s')
 
         try:
             # connect
@@ -158,7 +158,7 @@ class TestIndexNodeScale:
             collection_w.init_collection(name=c_name, schema=cf.gen_default_collection_schema())
             # insert
             loop = 10
-            for i in range(loop):
+            for _ in range(loop):
                 collection_w.insert(data)
             assert collection_w.num_entities == nb * loop
 
@@ -194,7 +194,7 @@ class TestIndexNodeScale:
 
             log.debug(f'one indexNode: {t2}')
             log.debug(f't2 is {t2}, t0 is {t0}, t2/t0 is {t2 / t0}')
-            # assert round(t2 / t0) == 2
+                # assert round(t2 / t0) == 2
 
         except Exception as e:
             raise Exception(str(e))

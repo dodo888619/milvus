@@ -98,7 +98,7 @@ class TestChaos(TestChaosBase):
         if deploy_tool == "helm":
             release_name = self.instance_name
         else:
-            release_name = self.instance_name + "-minio"
+            release_name = f"{self.instance_name}-minio"
         minio_ip_pod_pair = get_pod_ip_name_pairs("chaos-testing", f"release={release_name}, app=minio")
         ms = MilvusSys()
         minio_ip = list(minio_ip_pod_pair.keys())[0]
@@ -133,10 +133,7 @@ class TestChaos(TestChaosBase):
         log.info(f"file_type: {file_type}, nb: {nb}, dim: {dim}, varchar_len: {varchar_len}, with_varchar_field: {with_varchar_field}")
         self.init_health_checkers(dim=int(dim))
         nb = int(nb)
-        if str(with_varchar_field) in ["true", "True"]:
-            with_varchar_field = True
-        else:
-            with_varchar_field = False
+        with_varchar_field = str(with_varchar_field) in {"true", "True"}
         varchar_len = int(varchar_len)
 
         self.prepare_bulk_insert(file_type=file_type, nb=nb, dim=int(dim), varchar_len=varchar_len, with_varchar_field=with_varchar_field)

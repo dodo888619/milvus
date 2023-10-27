@@ -14,14 +14,13 @@ class TestAllCollection(TestcaseBase):
 
     @pytest.fixture(scope="function", params=get_collections(file_name="chaos_test_all_collections.json"))
     def collection_name(self, request):
-        if request.param == [] or request.param == "":
+        if request.param in [[], ""]:
             pytest.skip("The collection name is invalid")
         yield request.param
 
     def teardown_method(self, method):
         log.info(("*" * 35) + " teardown " + ("*" * 35))
-        log.info("[teardown_method] Start teardown test case %s..." %
-                 method.__name__)
+        log.info(f"[teardown_method] Start teardown test case {method.__name__}...")
         log.info("skip drop collection")
 
     @pytest.mark.tags(CaseLabel.L1)
@@ -50,10 +49,9 @@ class TestAllCollection(TestcaseBase):
 
         # insert
         offset = -3000
-        with_json = False
-        for field in collection_w.schema.fields:
-            if field.dtype.name == "JSON":
-                with_json = True
+        with_json = any(
+            field.dtype.name == "JSON" for field in collection_w.schema.fields
+        )
         data = cf.get_column_data_by_schema(nb=ct.default_nb, schema=schema, start=offset)
         t0 = time.time()
         _, res = collection_w.insert(data)
@@ -73,7 +71,7 @@ class TestAllCollection(TestcaseBase):
         # create index if not have
         index_infos = [index.to_dict() for index in collection_w.indexes]
         index_params = {"index_type": "HNSW", "metric_type": "L2", "params": {"M": 48, "efConstruction": 500}}
-        if len(index_infos) == 0:
+        if not index_infos:
             log.info(f"collection {name} does not have index, create index for it")
             t0 = time.time()
             index, _ = collection_w.create_index(field_name=float_vector_field_name,
@@ -100,7 +98,7 @@ class TestAllCollection(TestcaseBase):
         log.info(f"assert search: {tt}")
         assert len(res_1) == 1
         # query
-        term_expr = f'{int64_field_name} in {[i for i in range(offset, 0)]}'
+        term_expr = f'{int64_field_name} in {list(range(offset, 0))}'
         t0 = time.time()
         res, _ = collection_w.query(term_expr)
         tt = time.time() - t0

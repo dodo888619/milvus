@@ -5,11 +5,11 @@ from locust import HttpUser, task, between
 
 collection_name = "random_1m_2048_512_ip_sq8"
 headers = {'Content-Type': "application/json"}
-url = '/collections/%s/vectors' % collection_name
+url = f'/collections/{collection_name}/vectors'
 top_k = 2
 nq = 1
 dim = 512
-vectors =  [[random.random() for _ in range(dim)] for _ in range(nq)] 
+vectors =  [[random.random() for _ in range(dim)] for _ in range(nq)]
 data = {
     "search":{
         "topk": top_k,

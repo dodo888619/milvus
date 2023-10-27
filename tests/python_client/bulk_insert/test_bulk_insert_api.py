@@ -40,12 +40,11 @@ base_dir = "/tmp/bulk_insert_data"
 
 def entity_suffix(entities):
     if entities // 1000000 > 0:
-        suffix = f"{entities // 1000000}m"
+        return f"{entities // 1000000}m"
     elif entities // 1000 > 0:
-        suffix = f"{entities // 1000}k"
+        return f"{entities // 1000}k"
     else:
-        suffix = f"{entities}"
-    return suffix
+        return f"{entities}"
 
 
 class TestcaseBaseBulkInsert(TestcaseBase):
@@ -139,7 +138,7 @@ class TestBulkInsert(TestcaseBaseBulkInsert):
             field_name=df.vec_field, index_params=index_params
         )
         self.collection_wrap.load()
-        log.info(f"wait for load finished and be ready for search")
+        log.info("wait for load finished and be ready for search")
         time.sleep(10)
         log.info(
             f"query seg info: {self.utility_wrap.get_query_segment_info(c_name)[0]}"
@@ -219,7 +218,7 @@ class TestBulkInsert(TestcaseBaseBulkInsert):
             field_name=df.vec_field, index_params=index_params
         )
         self.collection_wrap.load()
-        log.info(f"wait for load finished and be ready for search")
+        log.info("wait for load finished and be ready for search")
         time.sleep(10)
         log.info(
             f"query seg info: {self.utility_wrap.get_query_segment_info(c_name)[0]}"
@@ -313,7 +312,7 @@ class TestBulkInsert(TestcaseBaseBulkInsert):
         res, _ = self.utility_wrap.index_building_progress(c_name)
         exp_res = {"total_rows": entities, "indexed_rows": entities}
         assert res == exp_res
-        log.info(f"wait for load finished and be ready for search")
+        log.info("wait for load finished and be ready for search")
         time.sleep(10)
         log.info(
             f"query seg info: {self.utility_wrap.get_query_segment_info(c_name)[0]}"
@@ -402,7 +401,7 @@ class TestBulkInsert(TestcaseBaseBulkInsert):
         # verify num entities
         assert self.collection_wrap.num_entities == entities
         # verify search and query
-        log.info(f"wait for load finished and be ready for search")
+        log.info("wait for load finished and be ready for search")
         time.sleep(10)
         search_data = cf.gen_binary_vectors(1, dim)[1]
         search_params = {"metric_type": "JACCARD", "params": {"nprobe": 10}}
@@ -490,10 +489,11 @@ class TestBulkInsert(TestcaseBaseBulkInsert):
         if fields_num_in_file in ["less", "more"]:
             assert not success
             if is_row_based:
-                if fields_num_in_file == "less":
-                    failed_reason = f"field '{additional_field}' missed at the row 0"
-                else:
-                    failed_reason = f"field '{df.float_field}' is not defined in collection schema"
+                failed_reason = (
+                    f"field '{additional_field}' missed at the row 0"
+                    if fields_num_in_file == "less"
+                    else f"field '{df.float_field}' is not defined in collection schema"
+                )
             else:
                 failed_reason = "is not equal to other fields"
             for state in states.values():
@@ -510,12 +510,12 @@ class TestBulkInsert(TestcaseBaseBulkInsert):
             res, _ = self.collection_wrap.has_index()
             assert res is True
             # verify search and query
-            log.info(f"wait for load finished and be ready for search")
+            log.info("wait for load finished and be ready for search")
             time.sleep(10)
             nq = 3
-            topk = 10
             search_data = cf.gen_vectors(nq, dim)
             search_params = ct.default_search_params
+            topk = 10
             res, _ = self.collection_wrap.search(
                 search_data,
                 df.vec_field,
@@ -570,10 +570,9 @@ class TestBulkInsert(TestcaseBaseBulkInsert):
             cf.gen_float_vec_field(name=df.vec_field, dim=dim),
         ]
         data = [
-            [i for i in range(direct_insert_row)],
+            list(range(direct_insert_row)),
             [np.float32(i) for i in range(direct_insert_row)],
             cf.gen_vectors(direct_insert_row, dim=dim),
-
         ]
         schema = cf.gen_collection_schema(fields=fields)
         self.collection_wrap.init_collection(c_name, schema=schema)
@@ -613,7 +612,7 @@ class TestBulkInsert(TestcaseBaseBulkInsert):
         exp_res = {'total_rows': num_entities, 'indexed_rows': num_entities}
         assert res == exp_res
         # verify search and query
-        log.info(f"wait for load finished and be ready for search")
+        log.info("wait for load finished and be ready for search")
         time.sleep(10)
         nq = 3
         topk = 10
@@ -701,7 +700,7 @@ class TestBulkInsert(TestcaseBaseBulkInsert):
         exp_res = {'total_rows': num_entities, 'indexed_rows': num_entities}
         assert res == exp_res
         # verify search and query
-        log.info(f"wait for load finished and be ready for search")
+        log.info("wait for load finished and be ready for search")
         time.sleep(10)
         nq = 3
         topk = 10
@@ -793,10 +792,11 @@ class TestBulkInsert(TestcaseBaseBulkInsert):
         if fields_num_in_file in ["less", "more"]:
             assert not success  # TODO: check error msg
             if is_row_based:
-                if fields_num_in_file == "less":
-                    failed_reason = f"field '{additional_field}' missed at the row 0"
-                else:
-                    failed_reason = f"field '{df.float_field}' is not defined in collection schema"
+                failed_reason = (
+                    f"field '{additional_field}' missed at the row 0"
+                    if fields_num_in_file == "less"
+                    else f"field '{df.float_field}' is not defined in collection schema"
+                )
             else:
                 failed_reason = "is not equal to other fields"
             for state in states.values():
@@ -810,7 +810,7 @@ class TestBulkInsert(TestcaseBaseBulkInsert):
             res, _ = self.collection_wrap.has_index()
             assert res is True
             # verify search and query
-            log.info(f"wait for load finished and be ready for search")
+            log.info("wait for load finished and be ready for search")
             time.sleep(10)
             search_data = cf.gen_vectors(1, dim)
             search_params = ct.default_search_params

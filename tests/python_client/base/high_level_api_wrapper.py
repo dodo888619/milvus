@@ -30,7 +30,7 @@ class HighLevelApiWrapper:
     def create_collection(self, client, collection_name, dimension, timeout=None, check_task=None,
                           check_items=None, **kwargs):
         timeout = TIMEOUT if timeout is None else timeout
-        kwargs.update({"timeout": timeout})
+        kwargs["timeout"] = timeout
 
         func_name = sys._getframe().f_code.co_name
         res, check = api_request([client.create_collection, collection_name, dimension], **kwargs)
@@ -42,7 +42,7 @@ class HighLevelApiWrapper:
     @trace()
     def insert(self, client, collection_name, data, timeout=None, check_task=None, check_items=None, **kwargs):
         timeout = TIMEOUT if timeout is None else timeout
-        kwargs.update({"timeout": timeout})
+        kwargs["timeout"] = timeout
 
         func_name = sys._getframe().f_code.co_name
         res, check = api_request([client.insert, collection_name, data], **kwargs)
@@ -55,7 +55,7 @@ class HighLevelApiWrapper:
     def search(self, client, collection_name, data, limit=10, filter=None, output_fields=None, search_params=None,
                timeout=None, check_task=None, check_items=None, **kwargs):
         timeout = TIMEOUT if timeout is None else timeout
-        kwargs.update({"timeout": timeout})
+        kwargs["timeout"] = timeout
         func_name = sys._getframe().f_code.co_name
         res, check = api_request([client.search, collection_name, data, filter, limit,
                                   output_fields, search_params], **kwargs)
@@ -69,7 +69,7 @@ class HighLevelApiWrapper:
     def query(self, client, collection_name, filter=None, output_fields=None,
               timeout=None, check_task=None, check_items=None, **kwargs):
         timeout = TIMEOUT if timeout is None else timeout
-        kwargs.update({"timeout": timeout})
+        kwargs["timeout"] = timeout
 
         func_name = sys._getframe().f_code.co_name
         res, check = api_request([client.query, collection_name, filter, output_fields], **kwargs)
@@ -83,7 +83,7 @@ class HighLevelApiWrapper:
     def get(self, client, collection_name, ids, output_fields=None,
             timeout=None, check_task=None, check_items=None, **kwargs):
         timeout = TIMEOUT if timeout is None else timeout
-        kwargs.update({"timeout": timeout})
+        kwargs["timeout"] = timeout
 
         func_name = sys._getframe().f_code.co_name
         res, check = api_request([client.get, collection_name, ids, output_fields], **kwargs)
@@ -96,7 +96,7 @@ class HighLevelApiWrapper:
     @trace()
     def num_entities(self, client, collection_name, timeout=None, check_task=None, check_items=None, **kwargs):
         timeout = TIMEOUT if timeout is None else timeout
-        kwargs.update({"timeout": timeout})
+        kwargs["timeout"] = timeout
 
         func_name = sys._getframe().f_code.co_name
         res, check = api_request([client.num_entities, collection_name], **kwargs)
@@ -108,7 +108,7 @@ class HighLevelApiWrapper:
     @trace()
     def delete(self, client, collection_name, pks, timeout=None, check_task=None, check_items=None, **kwargs):
         timeout = TIMEOUT if timeout is None else timeout
-        kwargs.update({"timeout": timeout})
+        kwargs["timeout"] = timeout
 
         func_name = sys._getframe().f_code.co_name
         res, check = api_request([client.delete, collection_name, pks], **kwargs)
@@ -120,7 +120,7 @@ class HighLevelApiWrapper:
     @trace()
     def flush(self, client, collection_name, timeout=None, check_task=None, check_items=None, **kwargs):
         timeout = TIMEOUT if timeout is None else timeout
-        kwargs.update({"timeout": timeout})
+        kwargs["timeout"] = timeout
 
         func_name = sys._getframe().f_code.co_name
         res, check = api_request([client.flush, collection_name], **kwargs)
@@ -132,7 +132,7 @@ class HighLevelApiWrapper:
     @trace()
     def describe_collection(self, client, collection_name, timeout=None, check_task=None, check_items=None, **kwargs):
         timeout = TIMEOUT if timeout is None else timeout
-        kwargs.update({"timeout": timeout})
+        kwargs["timeout"] = timeout
 
         func_name = sys._getframe().f_code.co_name
         res, check = api_request([client.describe_collection, collection_name], **kwargs)
@@ -144,7 +144,7 @@ class HighLevelApiWrapper:
     @trace()
     def list_collections(self, client, timeout=None, check_task=None, check_items=None, **kwargs):
         timeout = TIMEOUT if timeout is None else timeout
-        kwargs.update({"timeout": timeout})
+        kwargs["timeout"] = timeout
 
         func_name = sys._getframe().f_code.co_name
         res, check = api_request([client.list_collections], **kwargs)

@@ -16,10 +16,10 @@ logger = logging.getLogger("milvus_benchmark.metric.api")
 
 def insert_or_get(md5):
     collection = _client[DB][UNIQUE_ID_COLLECTION]
-    found = collection.find_one({'md5': md5})
-    if not found:
+    if found := collection.find_one({'md5': md5}):
+        return found['_id']
+    else:
         return collection.insert_one({'md5': md5}).inserted_id
-    return found['_id']
 
 
 def save(obj):

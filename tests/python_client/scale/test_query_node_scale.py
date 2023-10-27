@@ -93,7 +93,7 @@ class TestQueryNodeScale:
         if mic.wait_for_healthy(release_name, constants.NAMESPACE, timeout=1800):
             host = mic.endpoint(release_name, constants.NAMESPACE).split(':')[0]
         else:
-            raise MilvusException(message=f'Milvus healthy timeout 1800s')
+            raise MilvusException(message='Milvus healthy timeout 1800s')
 
         try:
             # connect
@@ -210,7 +210,7 @@ class TestQueryNodeScale:
         if mic.wait_for_healthy(release_name, constants.NAMESPACE, timeout=1800):
             host = mic.endpoint(release_name, constants.NAMESPACE).split(':')[0]
         else:
-            raise MilvusException(message=f'Milvus healthy timeout 1800s')
+            raise MilvusException(message='Milvus healthy timeout 1800s')
 
         try:
             scale_querynode = random.choice([6, 7, 4, 3])
@@ -290,7 +290,7 @@ class TestQueryNodeScale:
         if mic.wait_for_healthy(release_name, constants.NAMESPACE, timeout=1800):
             host = mic.endpoint(release_name, constants.NAMESPACE).split(':')[0]
         else:
-            raise MilvusException(message=f'Milvus healthy timeout 1800s')
+            raise MilvusException(message='Milvus healthy timeout 1800s')
         try:
             # prepare collection
             connections.connect("scale-in", host=host, port=19530)

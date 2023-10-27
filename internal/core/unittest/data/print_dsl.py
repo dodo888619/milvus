@@ -16,7 +16,7 @@ def show_dsl(query_entities):
         if isinstance(param, dict):
             if "vector" in param:
                 # TODO: Here may not replace ph
-                ph = "$" + str(len(placeholders))
+                ph = f"${len(placeholders)}"
 
                 for pk, pv in param["vector"].items():
                     if "query" not in pv:

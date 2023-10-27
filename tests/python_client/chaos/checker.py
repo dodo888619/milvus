@@ -49,7 +49,7 @@ def trace(fmt=DEFAULT_FMT, prefix='test', flag=True):
             operation_name = func.__name__
             if flag:
                 collection_name = self.c_wrap.name
-                log_str = f"[{prefix}]" + fmt.format(**locals())
+                log_str = f"[{prefix}]{fmt.format(**locals())}"
                 # TODO: add report function in this place, like uploading to influxdb
                 # it is better a async way to do this, in case of blocking the request processing
                 log.info(log_str)
@@ -66,7 +66,9 @@ def trace(fmt=DEFAULT_FMT, prefix='test', flag=True):
                 self._fail += 1
                 self.fail_records.append(("failure", self._succ + self._fail, start_time, start_time_ts))
             return res, result
+
         return inner_wrapper
+
     return decorate
 
 
@@ -80,11 +82,16 @@ def exception_handler():
             except Exception as e:
                 log_row_length = 300
                 e_str = str(e)
-                log_e = e_str[0:log_row_length] + \
-                    '......' if len(e_str) > log_row_length else e_str
+                log_e = (
+                    f'{e_str[:log_row_length]}......'
+                    if len(e_str) > log_row_length
+                    else e_str
+                )
                 log.error(log_e)
                 return Error(e), False
+
         return inner_wrapper
+
     return wrapper
 
 
@@ -186,7 +193,7 @@ class Checker:
                                  bucket_name=None):
         schema = self.schema
         bucket_name = self.bucket_name if bucket_name is None else bucket_name
-        log.info(f"prepare data for bulk insert")
+        log.info("prepare data for bulk insert")
         try:
             files = cf.prepare_bulk_insert_data(schema=schema,
                                                 nb=nb,
@@ -340,7 +347,7 @@ class InsertChecker(Checker):
     def insert(self):
         data = cf.get_column_data_by_schema(nb=constants.DELTA_PER_INS, schema=self.schema)
         ts_data = []
-        for i in range(constants.DELTA_PER_INS):
+        for _ in range(constants.DELTA_PER_INS):
             time.sleep(0.001)
             offset_ts = int(time.time()*self.scale)
             ts_data.append(offset_ts)
@@ -378,11 +385,12 @@ class InsertChecker(Checker):
         self.c_wrap.load()
         end_time_stamp = int(time.time()*self.scale)
         self.term_expr = f'{self.int64_field_name} >= {self.start_time_stamp} and ' \
-                         f'{self.int64_field_name} <= {end_time_stamp}'
-        data_in_client = []
-        for d in self.inserted_data:
-            if self.start_time_stamp <= d <= end_time_stamp:
-                data_in_client.append(d)
+                             f'{self.int64_field_name} <= {end_time_stamp}'
+        data_in_client = [
+            d
+            for d in self.inserted_data
+            if self.start_time_stamp <= d <= end_time_stamp
+        ]
         res, result = self.c_wrap.query(self.term_expr, timeout=timeout,
                                         output_fields=[f'{self.int64_field_name}'],
                                         limit=len(data_in_client) * 2,
@@ -434,7 +442,7 @@ class IndexChecker(Checker):
             collection_name = cf.gen_unique_str("IndexChecker_")
         super().__init__(collection_name=collection_name, schema=schema)
         self.index_name = cf.gen_unique_str('index_')
-        for i in range(5):
+        for _ in range(5):
             self.c_wrap.insert(data=cf.get_column_data_by_schema(nb=constants.ENTITIES_FOR_SEARCH, schema=self.schema),
                                timeout=timeout, enable_traceback=enable_traceback)
         # do as a flush before indexing
@@ -488,9 +496,7 @@ class QueryChecker(Checker):
 
     @exception_handler()
     def run_task(self):
-        int_values = []
-        for _ in range(5):
-            int_values.append(randint(0, constants.ENTITIES_FOR_SEARCH))
+        int_values = [randint(0, constants.ENTITIES_FOR_SEARCH) for _ in range(5)]
         self.term_expr = f'{self.int64_field_name} in {int_values}'
         res, result = self.query()
         return res, result
@@ -667,12 +673,10 @@ class LoadBalanceChecker(Checker):
     def prepare(self):
         """prepare load balance params"""
         res, _ = self.c_wrap.get_replicas()
-        # find a group which has multi nodes
-        group_nodes = []
-        for g in res.groups:
-            if len(g.group_nodes) >= 2:
-                group_nodes = list(g.group_nodes)
-                break
+        group_nodes = next(
+            (list(g.group_nodes) for g in res.groups if len(g.group_nodes) >= 2),
+            [],
+        )
         self.src_node_id = group_nodes[0]
         self.dst_node_ids = group_nodes[1:]
         res, _ = self.utility_wrap.get_query_segment_info(self.c_wrap.name)

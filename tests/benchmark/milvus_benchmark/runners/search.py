@@ -24,7 +24,7 @@ class SearchRunner(BaseRunner):
         nqs = collection["nqs"]
         filters = collection["filters"] if "filters" in collection else []
         guarantee_timestamp = collection["guarantee_timestamp"] if "guarantee_timestamp" in collection else None
-        
+
         search_params = collection["search_params"]
         # TODO: get fields by describe_index
         # fields = self.get_fields(self.milvus, collection_name)
@@ -41,11 +41,11 @@ class SearchRunner(BaseRunner):
         vector_type = utils.get_vector_type(data_type)
         index_field_name = utils.get_default_field_name(vector_type)
         base_query_vectors = utils.get_vectors_from_binary(utils.MAX_NQ, dimension, data_type)
-        cases = list()
-        case_metrics = list()
+        cases = []
+        case_metrics = []
         self.init_metric(self.name, collection_info, index_info, None)
         for search_param in search_params:
-            logger.info("Search param: %s" % json.dumps(search_param))
+            logger.info(f"Search param: {json.dumps(search_param)}")
             for filter in filters:
                 filter_query = []
                 filter_param = []
@@ -57,10 +57,10 @@ class SearchRunner(BaseRunner):
                         filter_query.append(eval(filter["term"]))
                         filter_param.append(filter["term"])
                     else:
-                        raise Exception("%s not supported" % filter)
-                logger.info("filter param: %s" % json.dumps(filter_param))
+                        raise Exception(f"{filter} not supported")
+                logger.info(f"filter param: {json.dumps(filter_param)}")
                 for nq in nqs:
-                    query_vectors = base_query_vectors[0:nq]
+                    query_vectors = base_query_vectors[:nq]
                     for top_k in top_ks:
                         search_info = {
                             "topk": top_k, 
@@ -94,7 +94,7 @@ class SearchRunner(BaseRunner):
         collection_name = case_param["collection_name"]
         self.milvus.set_collection(collection_name)
         if not self.milvus.exists_collection():
-            logger.error("collection name: {} not existed".format(collection_name))
+            logger.error(f"collection name: {collection_name} not existed")
             return False
         logger.debug(self.milvus.count())
         logger.info("Start load collection")
@@ -107,7 +107,7 @@ class SearchRunner(BaseRunner):
         run_count = case_param["run_count"]
         avg_query_time = 0.0
         min_query_time = 0.0
-        total_query_time = 0.0        
+        total_query_time = 0.0
         for i in range(run_count):
             logger.debug("Start run query, run %d of %s" % (i+1, run_count))
             start_time = time.time()
@@ -118,8 +118,7 @@ class SearchRunner(BaseRunner):
             if (i == 0) or (min_query_time > interval_time):
                 min_query_time = round(interval_time, 2)
         avg_query_time = round(total_query_time/run_count, 2)
-        tmp_result = {"search_time": min_query_time, "avc_search_time": avg_query_time}
-        return tmp_result
+        return {"search_time": min_query_time, "avc_search_time": avg_query_time}
 
 
 class InsertSearchRunner(BaseRunner):
@@ -164,10 +163,10 @@ class InsertSearchRunner(BaseRunner):
         index_field_name = utils.get_default_field_name(vector_type)
         # Get the path of the query.npy file stored on the NAS and get its data
         base_query_vectors = utils.get_vectors_from_binary(utils.MAX_NQ, dimension, data_type)
-        cases = list()
-        case_metrics = list()
+        cases = []
+        case_metrics = []
         self.init_metric(self.name, collection_info, index_info, None)
-        
+
         for search_param in search_params:
             if not filters:
                 filters.append(None)
@@ -182,7 +181,7 @@ class InsertSearchRunner(BaseRunner):
                     # filter_param.append(filter["term"])
                 for nq in nqs:
                     # Take nq groups of data for query
-                    query_vectors = base_query_vectors[0:nq]
+                    query_vectors = base_query_vectors[:nq]
                     for top_k in top_ks:
                         search_info = {
                             "topk": top_k, 
@@ -277,7 +276,7 @@ class InsertSearchRunner(BaseRunner):
     def run_case(self, case_metric, **case_param):
         run_count = case_param["run_count"]
         min_query_time = 0.0
-        total_query_time = 0.0        
+        total_query_time = 0.0
         for i in range(run_count):
             # Number of successive queries
             logger.debug("Start run query, run %d of %s" % (i+1, run_count))
@@ -291,11 +290,9 @@ class InsertSearchRunner(BaseRunner):
                 min_query_time = round(interval_time, 2)
         avg_query_time = round(total_query_time/run_count, 2)
         logger.info("Min query time: %.2f, avg query time: %.2f" % (min_query_time, avg_query_time))
-        # insert_result: "total_time", "rps", "ni_time"
-        tmp_result = {"insert": self.insert_result, "build_time": self.build_time, "search_time": min_query_time, "avc_search_time": avg_query_time}
-        # 
-        # logger.info("Start load collection")
-        # self.milvus.load_collection(timeout=1200)
-        # logger.info("Release load collection")
-        # self.milvus.release_collection()
-        return tmp_result
+        return {
+            "insert": self.insert_result,
+            "build_time": self.build_time,
+            "search_time": min_query_time,
+            "avc_search_time": avg_query_time,
+        }

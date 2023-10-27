@@ -92,7 +92,7 @@ class TestOperations(TestBase):
         t.start()
         # t.join()
         log.info('start a thread to reset health_checkers when standby is activated')
-        for i in range(10):
+        for _ in range(10):
             sleep(request_duration//10)
             for k, v in self.health_checkers.items():
                 v.check_result()

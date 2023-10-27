@@ -13,8 +13,7 @@ def get_tag(url):
 
     res = response.json()["results"]
     sorted_r = sorted(res, key=lambda k: k['last_updated'])
-    tags = [r["name"] for r in sorted_r]
-    return tags
+    return [r["name"] for r in sorted_r]
 
 
 latest_tag = [tag for tag in get_tag(milvus_dev) if "latest" not in tag][-1]

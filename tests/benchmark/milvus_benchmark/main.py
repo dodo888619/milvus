@@ -33,7 +33,7 @@ def positive_int(s):
 
 def get_image_tag(image_version):
     """ Set the image version to the latest version """
-    return "%s-latest" % str(image_version)
+    return f"{str(image_version)}-latest"
 
 
 # def shutdown(event):
@@ -67,10 +67,10 @@ def run_suite(run_type, suite, env_mode, env_params, timeout=None):
             helm_path = env_params["helm_path"]
             server_name = helm_params["server_name"] if "server_name" in helm_params else None
             server_tag = helm_params["server_tag"] if "server_tag" in helm_params else None
-            if not server_name and not server_tag:
-                metric.hardware = Hardware("")
-            else:
+            if server_name or server_tag:
                 metric.hardware = Hardware(server_name) if server_name else Hardware(server_tag)
+            else:
+                metric.hardware = Hardware("")
             start_status = env.start_up(helm_path, helm_params)
         if start_status:
             metric.update_status(status="DEPLOYE_SUCC")
@@ -120,10 +120,7 @@ def run_suite(run_type, suite, env_mode, env_params, timeout=None):
             # Save all reported data to the database
             api.save(metric)
         env.tear_down()
-        if metric.status != "RUN_SUCC":
-            return False
-        else:
-            return True
+        return metric.status == "RUN_SUCC"
 
 
 def main():
@@ -222,10 +219,8 @@ def main():
                     # logger.info(job.id)
 
     elif args.local:
-        # for local mode
-        deploy_params = args.server_config
         deploy_params_dict = None
-        if deploy_params:
+        if deploy_params := args.server_config:
             with open(deploy_params) as f:
                 deploy_params_dict = full_load(f)
                 f.close()

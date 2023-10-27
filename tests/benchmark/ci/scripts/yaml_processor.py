@@ -68,7 +68,7 @@ def _map_comment(_element, _key):
             try:
                 # comment is below element, add profix "#\n"
                 col = _element.lc.col + 2
-                space_list = [" " for i in range(col)]
+                space_list = [" " for _ in range(col)]
                 space_str = "".join(space_list)
 
                 origin_comment = "\n" + "".join([space_str + t.value for t in token[3]])
@@ -79,13 +79,8 @@ def _map_comment(_element, _key):
 
 
 def _seq_comment(_element, _index):
-    # get target comment
-    _comment = ""
     token = _element.ca.items.get(_index, None)
-    if token is not None:
-        _comment = token[0].value
-
-    return _comment
+    return token[0].value if token is not None else ""
 
 
 def _start_comment(_element):
@@ -109,18 +104,13 @@ def _comment_counter(_comment):
 
     _counter = []
     if _comment.startswith("\n"):
-        _counter.append("")
-        _counter.append(x(_comment[1:]))
-
+        _counter.extend(("", x(_comment[1:])))
         return _counter
     elif _comment.startswith("#\n"):
-        _counter.append("")
-        _counter.append(x(_comment[2:]))
+        _counter.extend(("", x(_comment[2:])))
     else:
         index = _comment.find("\n")
-        _counter.append(x(_comment[:index]))
-        _counter.append(x(_comment[index + 1:]))
-
+        _counter.extend((x(_comment[:index]), x(_comment[index + 1:])))
     return _counter
 
 
@@ -139,13 +129,10 @@ def _obtain_comment(_m_comment, _t_comment):
         comment = _t_comment
     elif not _t_counter[0] and not _t_counter[1]:
         comment = _m_comment
-    elif not _m_counter[0] and not _m_counter[1]:
-        comment = _t_comment
+    elif _t_counter[0]:
+        comment = _m_comment.replace(_m_counter[0], _t_counter[0], 1)
     else:
-        if _t_counter[0]:
-            comment = _m_comment.replace(_m_counter[0], _t_counter[0], 1)
-        else:
-            comment = _m_comment.replace(_m_counter[1], _t_counter[1], 1)
+        comment = _m_comment.replace(_m_counter[1], _t_counter[1], 1)
 
     i = comment.find("\n\n")
     while i >= 0:
@@ -196,7 +183,7 @@ def update_map_element(element, key, value, comment, _type):
     origin_comment = _map_comment(element, key)
 
     sub_element = element.get(key, None)
-    if isinstance(sub_element, CommentedMap) or isinstance(sub_element, CommentedSeq):
+    if isinstance(sub_element, (CommentedMap, CommentedSeq)):
         print("Only support update a single value")
 
     element.update({key: value})
@@ -219,17 +206,17 @@ def run_update(code, keys, value, comment, _app):
     key_list = keys.split(".")
 
     space_str = ":\n  "
-    key_str = "{}".format(key_list[0])
+    key_str = f"{key_list[0]}"
     for key in key_list[1:]:
         key_str = key_str + space_str + key
-        space_str = space_str + "  "
+        space_str = f"{space_str}  "
     if not _app:
-        yaml_str = """{}: {}""".format(key_str, value)
+        yaml_str = f"""{key_str}: {value}"""
     else:
-        yaml_str = "{}{}- {}".format(key_str, space_str, value)
+        yaml_str = f"{key_str}{space_str}- {value}"
 
     if comment:
-        yaml_str = "{} # {}".format(yaml_str, comment)
+        yaml_str = f"{yaml_str} # {comment}"
 
     mcode = yaml.load(yaml_str)
 
@@ -259,23 +246,23 @@ def _update(code, _update, _app, _tips):
 
 
 def _backup(in_file_p):
-    backup_p = in_file_p + ".bak"
+    backup_p = f"{in_file_p}.bak"
 
     if os.path.exists(backup_p):
         os.remove(backup_p)
 
     if not os.path.exists(in_file_p):
-        print("File {} not exists.".format(in_file_p))
+        print(f"File {in_file_p} not exists.")
         sys.exit(1)
 
     shutil.copyfile(in_file_p, backup_p)  # 复制文件
 
 
 def _recovery(in_file_p):
-    backup_p = in_file_p + ".bak"
+    backup_p = f"{in_file_p}.bak"
 
     if not os.path.exists(in_file_p):
-        print("File {} not exists.".format(in_file_p))
+        print(f"File {in_file_p} not exists.")
         sys.exit(1)
     elif not os.path.exists(backup_p):
         print("Backup file not exists")
@@ -321,10 +308,6 @@ def _merge(master, target):
                     master.append(target_item)
             elif target_item not in master:
                 master.append(target[index])
-            else:
-                # merge(master[index], target[index])
-                pass
-
             # # remove enter signal in previous item
             previous_comment = _seq_comment(master, master_index - 1)
             _add_eol_comment(master, _extract_comment(previous_comment), master_index - 1)
@@ -334,7 +317,6 @@ def _merge(master, target):
             if len(comment) > 0:
                 _add_eol_comment(master, _extract_comment(comment) + "\n\n", len(master) - 1)
 
-    ## item is a map
     elif isinstance(target, CommentedMap):
         for item in target:
             if item == "flag":
@@ -349,9 +331,7 @@ def _merge(master, target):
             target_start_comment = _start_comment(target)
 
             m = master.get(item, default=None)
-            if m is None or \
-                    (not (isinstance(m, CommentedMap) or
-                          isinstance(m, CommentedSeq))):
+            if m is None or not (isinstance(m, (CommentedMap, CommentedSeq))):
                 master.update({item: target[item]})
 
             else:
@@ -432,9 +412,7 @@ def update_yaml(_args):
 
 def reset(_args):
     _dict = _args.__dict__
-    _f = _dict.get('f', None) or _dict.get('file', None)
-
-    if _f:
+    if _f := _dict.get('f', None) or _dict.get('file', None):
         _recovery(_f)
     else:
         _t = _dict.get('tips', None) or "Input \"-h\" for more information"

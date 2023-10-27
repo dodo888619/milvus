@@ -28,13 +28,13 @@ def collection_parser(collection_name):
     #     return None
     data_type = tmp[0]
     collection_size_unit = tmp[1][-1]
-    collection_size = tmp[1][0:-1]
-    if collection_size_unit == "w":
-        collection_size = int(collection_size) * 10000
+    collection_size = tmp[1][:-1]
+    if collection_size_unit == "b":
+        collection_size = int(collection_size) * 1000000000
     elif collection_size_unit == "m":
         collection_size = int(collection_size) * 1000000
-    elif collection_size_unit == "b":
-        collection_size = int(collection_size) * 1000000000
+    elif collection_size_unit == "w":
+        collection_size = int(collection_size) * 10000
     dimension = int(tmp[2])
     metric_type = str(tmp[3])
     return data_type, collection_size, dimension, metric_type
@@ -67,39 +67,30 @@ def search_params_parser(param):
     """ Parser params of search interface and return top_ks, nqs, nprobes"""
 
     # parse top-k, set default value if top-k not in param
-    if "top_ks" not in param:
-        top_ks = [10]
-    else:
-        top_ks = param["top_ks"]
+    top_ks = [10] if "top_ks" not in param else param["top_ks"]
     if isinstance(top_ks, int):
         top_ks = [top_ks]
     elif isinstance(top_ks, list):
         top_ks = list(top_ks)
     else:
-        logger.warning("Invalid format top-ks: %s" % str(top_ks))
+        logger.warning(f"Invalid format top-ks: {str(top_ks)}")
 
     # parse nqs, set default value if nq not in param
-    if "nqs" not in param:
-        nqs = [10]
-    else:
-        nqs = param["nqs"]
+    nqs = [10] if "nqs" not in param else param["nqs"]
     if isinstance(nqs, int):
         nqs = [nqs]
     elif isinstance(nqs, list):
         nqs = list(nqs)
     else:
-        logger.warning("Invalid format nqs: %s" % str(nqs))
+        logger.warning(f"Invalid format nqs: {str(nqs)}")
 
     # parse nprobes
-    if "nprobes" not in param:
-        nprobes = [1]
-    else:
-        nprobes = param["nprobes"]
+    nprobes = [1] if "nprobes" not in param else param["nprobes"]
     if isinstance(nprobes, int):
         nprobes = [nprobes]
     elif isinstance(nprobes, list):
         nprobes = list(nprobes)
     else:
-        logger.warning("Invalid format nprobes: %s" % str(nprobes))    
+        logger.warning(f"Invalid format nprobes: {str(nprobes)}")    
 
     return top_ks, nqs, nprobes

@@ -131,7 +131,7 @@ class MilvusOperator(object):
             res_object = cus_res.get(release_name)
             mic_status = res_object.get('status', None)
             if mic_status is not None:
-                if 'Healthy' == mic_status.get('status'):
+                if mic_status.get('status') == 'Healthy':
                     log.info(f"milvus healthy in {time.time() - starttime} seconds")
                     return True
                 else:
@@ -144,11 +144,11 @@ class MilvusOperator(object):
         Method: get Milvus endpoint by name and namespace
         Return: a string type endpoint. e.g: host:port
         """
-        endpoint = None
         cus_res = CusResource(kind=self.plural, group=self.group,
                               version=self.version, namespace=namespace)
         res_object = cus_res.get(release_name)
-        if res_object.get('status', None) is not None:
-            endpoint = res_object['status']['endpoint']
-
-        return endpoint
+        return (
+            res_object['status']['endpoint']
+            if res_object.get('status', None) is not None
+            else None
+        )

@@ -62,7 +62,6 @@ class SimpleChaosRunner(BaseRunner):
         before_steps = collection["before"]
         after = collection["after"] if "after" in collection else None
         processing = collection["processing"]
-        case_metrics = []
         case_params = [{
             "before_steps": before_steps,
             "after": after,
@@ -71,7 +70,7 @@ class SimpleChaosRunner(BaseRunner):
         self.init_metric(self.name, {}, {}, None)
         case_metric = copy.deepcopy(self.metric)
         case_metric.set_case_metric_type()
-        case_metrics.append(case_metric)
+        case_metrics = [case_metric]
         return case_params, case_metrics
 
     def prepare(self, **case_param):
@@ -87,7 +86,7 @@ class SimpleChaosRunner(BaseRunner):
         user_chaos = processing["chaos"]
         kind = user_chaos["kind"]
         spec = user_chaos["spec"]
-        metadata_name = config.NAMESPACE + "-" + kind.lower()
+        metadata_name = f"{config.NAMESPACE}-{kind.lower()}"
         metadata = {"name": metadata_name}
         process_assertion = processing["assertion"]
         after_assertion = after["assertion"]
@@ -113,9 +112,8 @@ class SimpleChaosRunner(BaseRunner):
         try:
             t_milvus.start()
             chaos_opt.create_chaos_object(experiment_config)
-        # processing assert exception
         except Exception as e:
-            logger.info("exception {}".format(str(e)))
+            logger.info(f"exception {str(e)}")
         else:
             chaos_opt.delete_chaos_object(chaos_mesh.metadata["name"])
             # TODO retry connect milvus

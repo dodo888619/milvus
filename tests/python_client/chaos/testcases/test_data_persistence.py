@@ -13,8 +13,7 @@ class TestDataPersistence(TestcaseBase):
 
     def teardown_method(self, method):
         log.info(("*" * 35) + " teardown " + ("*" * 35))
-        log.info("[teardown_method] Start teardown test case %s..." %
-                 method.__name__)
+        log.info(f"[teardown_method] Start teardown test case {method.__name__}...")
         log.info("skip drop collection")
 
     @pytest.mark.tags(CaseLabel.L3)
@@ -48,7 +47,7 @@ class TestDataPersistence(TestcaseBase):
         # create index if not have
         index_infos = [index.to_dict() for index in collection_w.indexes]
         index_params = {"index_type": "HNSW", "metric_type": "L2", "params": {"M": 48, "efConstruction": 500}}
-        if len(index_infos) == 0:
+        if not index_infos:
             log.info("collection {name} does not have index, create index for it")
             t0 = time.time()
             index, _ = collection_w.create_index(field_name=ct.default_float_vec_field_name,

@@ -27,7 +27,7 @@ NAS_MOUNT_PATH = '/test'
 RAW_DATA_DIR = "/test/milvus/raw_data/"
 
 # nars log
-LOG_PATH = "/test/milvus/benchmark/logs/{}/".format(BRANCH)
+LOG_PATH = f"/test/milvus/benchmark/logs/{BRANCH}/"
 
 # Three deployment methods currently supported
 DEFAULT_DEPLOY_MODE = "single"

@@ -52,10 +52,10 @@ def hello_milvus(host="127.0.0.1"):
     t0 = time.time()
     collection.insert(
         [
-            [i for i in range(nb)],
+            list(range(nb)),
             [np.float32(i) for i in range(nb)],
             [str(i) for i in range(nb)],
-            vectors
+            vectors,
         ]
     )
     t1 = time.time()
@@ -74,7 +74,7 @@ def hello_milvus(host="127.0.0.1"):
         replica_number = len(replicas_info.groups)
         print(f"\nReplicas number is {replica_number}")
     except Exception as e:
-        print(str(e))
+        print(e)
         replica_number = 1
 
     # create index and load table

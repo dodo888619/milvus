@@ -29,8 +29,7 @@ class TestActionBeforeReinstall(TestDeployBase):
 
     def teardown_method(self, method):
         log.info(("*" * 35) + " teardown " + ("*" * 35))
-        log.info("[teardown_method] Start teardown test case %s..." %
-                 method.__name__)
+        log.info(f"[teardown_method] Start teardown test case {method.__name__}...")
         log.info("skip drop collection")
 
     @pytest.mark.skip()
@@ -41,9 +40,9 @@ class TestActionBeforeReinstall(TestDeployBase):
         before reinstall: create collection and insert data, load and search
         after reinstall: get collection, search, create index, load, and search
         """
-        name = "task_1_" + index_type
+        name = f"task_1_{index_type}"
         insert_data = False
-        is_binary = True if "BIN" in index_type else False
+        is_binary = "BIN" in index_type
         is_flush = False
         # init collection
         collection_w = self.init_collection_general(insert_data=insert_data, is_binary=is_binary, nb=data_size,
@@ -93,8 +92,8 @@ class TestActionBeforeReinstall(TestDeployBase):
         before reinstall: create collection, insert data and create index,load and search
         after reinstall: get collection, search, insert data, create index, load, and search
         """
-        name = "task_2_" + index_type
-        is_binary = True if "BIN" in index_type else False
+        name = f"task_2_{index_type}"
+        is_binary = "BIN" in index_type
         # init collection
         collection_w = self.init_collection_general(insert_data=False, is_binary=is_binary, nb=data_size,
                                                     is_flush=False, name=name, active_trace=True)[0]
@@ -146,7 +145,6 @@ class TestActionBeforeReinstall(TestDeployBase):
     @pytest.mark.parametrize("is_string_indexed", [True, False])
     @pytest.mark.parametrize("is_vector_indexed", [True, False])  # , "BIN_FLAT"
     @pytest.mark.parametrize("segment_status", ["only_growing", "sealed", "all"])  # , "BIN_FLAT"
-    # @pytest.mark.parametrize("is_empty", [True, False])  # , "BIN_FLAT" (keep one is enough)
     @pytest.mark.parametrize("index_type", random.sample(dc.all_index_types, 3))  # , "BIN_FLAT"
     def test_task_all(self, index_type, is_compacted,
                       segment_status, is_vector_indexed, is_string_indexed, replica_number, is_deleted, data_size):
@@ -156,11 +154,11 @@ class TestActionBeforeReinstall(TestDeployBase):
         """
         name = f"index_type_{index_type}_segment_status_{segment_status}_is_vector_indexed_{is_vector_indexed}_is_string_indexed_{is_string_indexed}_is_compacted_{is_compacted}_is_deleted_{is_deleted}_replica_number_{replica_number}_data_size_{data_size}"
         ms = MilvusSys()
-        is_binary = True if "BIN" in index_type else False
+        is_binary = "BIN" in index_type
         # insert with small size data without flush to get growing segment
         collection_w = self.init_collection_general(insert_data=True, is_binary=is_binary, nb=3000,
                                                     is_flush=False, name=name)[0]
-        
+
         # load for growing segment
         if replica_number > 0:
             collection_w.load(replica_number=replica_number)
@@ -172,7 +170,7 @@ class TestActionBeforeReinstall(TestDeployBase):
         if segment_status == "only_growing":
             pytest.skip("already get growing segment, skip testcase")
         # insert with flush multiple times to generate multiple sealed segment
-        for i in range(5):
+        for _ in range(5):
             self.init_collection_general(insert_data=True, is_binary=is_binary, nb=data_size,
                                          is_flush=False, name=name)
         if is_binary:

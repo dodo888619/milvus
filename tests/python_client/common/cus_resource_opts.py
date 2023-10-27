@@ -17,11 +17,7 @@ class CustomResourceOperations(object):
         self.group = group
         self.version = version
         self.namespace = namespace
-        if kind.lower()[-1] != "s":
-            self.plural = kind.lower() + "s"
-        else:
-            self.plural = kind.lower()
-
+        self.plural = f"{kind.lower()}s" if kind.lower()[-1] != "s" else kind.lower()
         # init k8s client config
         in_cluster = os.getenv(in_cluster_env, default='False')
         log.debug(f"env variable IN_CLUSTER: {in_cluster}")

@@ -9,11 +9,8 @@ logger = logging.getLogger("milvus_benchmark.runners.get")
 
 
 def get_ids(length, size):
-    ids_list = []
     step = size // length
-    for i in range(length):
-        ids_list.append(step * i)
-    return ids_list
+    return [step * i for i in range(length)]
 
 
 class GetRunner(BaseRunner):
@@ -45,12 +42,10 @@ class GetRunner(BaseRunner):
             "index_type": index_type,
             "index_param": index_param
         }
-        flush = True
-        if "flush" in collection and collection["flush"] == "no":
-            flush = False
+        flush = "flush" not in collection or collection["flush"] != "no"
         self.init_metric(self.name, collection_info, index_info, search_info=None)
-        case_metrics = list()
-        case_params = list()
+        case_metrics = []
+        case_params = []
         for ids_length in ids_length_list:
             ids = get_ids(ids_length, collection_size)
             case_metric = copy.deepcopy(self.metric)
@@ -89,8 +84,7 @@ class GetRunner(BaseRunner):
         start_time = time.time()
         self.milvus.get(ids)
         get_time = round(time.time() - start_time, 2)
-        tmp_result = {"get_time": get_time}
-        return tmp_result
+        return {"get_time": get_time}
 
 
 class InsertGetRunner(GetRunner):

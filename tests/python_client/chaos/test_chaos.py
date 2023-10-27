@@ -24,7 +24,7 @@ def check_cluster_nodes(chaos_config):
     # Even though the replicas is greater than 1, it can not provide HA, so cluster_nodes is set as 1 for this situation.
     if "all" in chaos_config["metadata"]["name"]:
         return 1
-    
+
     selector = findkeys(chaos_config, "selector")
     selector = list(selector)
     log.info(f"chaos target selector: {selector}")
@@ -32,9 +32,7 @@ def check_cluster_nodes(chaos_config):
     selector = selector[0] # chaos yaml file must place the effected pod selector in the first position
     namespace = selector["namespaces"][0]
     labels_dict = selector["labelSelectors"]
-    labels_list = []
-    for k,v in labels_dict.items():
-        labels_list.append(k+"="+v)
+    labels_list = [f"{k}={v}" for k, v in labels_dict.items()]
     labels_str = ",".join(labels_list)
     pods = get_pod_list(namespace, labels_str)
     return len(pods)
@@ -62,7 +60,7 @@ class TestChaosBase:
 
     def parser_testcase_config(self, chaos_yaml, chaos_config):
         cluster_nodes = check_cluster_nodes(chaos_config)
-        tests_yaml = constants.TESTS_CONFIG_LOCATION + 'testcases.yaml'
+        tests_yaml = f'{constants.TESTS_CONFIG_LOCATION}testcases.yaml'
         tests_config = cc.gen_experiment_config(tests_yaml)
         test_collections = tests_config.get('Collections', None)
         for t in test_collections:

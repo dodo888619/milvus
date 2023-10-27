@@ -16,7 +16,6 @@ class BaseChaos(object):
         self.spec = spec
 
     def gen_experiment_config(self):
-        pass
         """
         1. load dict from default yaml
         2. merge dict between dict and self.x

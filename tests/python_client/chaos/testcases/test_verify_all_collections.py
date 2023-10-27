@@ -41,7 +41,7 @@ def get_collections_with_limit():
     selected_collections = []
     for v in m.values():
         selected_collections.extend(v)
-    if len(selected_collections) == 0:
+    if not selected_collections:
         selected_collections = [None]
     return selected_collections
 
@@ -50,7 +50,7 @@ class TestOperations(TestBase):
 
     @pytest.fixture(scope="function", params=get_collections_with_limit())
     def collection_name(self, request):
-        if request.param == [] or request.param == "":
+        if request.param in [[], ""]:
             pytest.skip("The collection name is invalid")
         yield request.param
 
@@ -87,7 +87,7 @@ class TestOperations(TestBase):
         log.info("*********************Test Start**********************")
         log.info(connections.get_connection_addr('default'))
         c_name = collection_name
-        self.init_health_checkers(collection_name=c_name)
+        self.init_health_checkers(c_name=c_name)
         cc.start_monitor_threads(self.health_checkers)
         log.info("*********************Request Load Start**********************")
         # wait request_duration for the load request to be finished
@@ -95,7 +95,7 @@ class TestOperations(TestBase):
         if request_duration[-1] == "+":
             request_duration = request_duration[:-1]
         request_duration = eval(request_duration)
-        for i in range(10):
+        for _ in range(10):
             sleep(request_duration//10)
             for k, v in self.health_checkers.items():
                 v.check_result()

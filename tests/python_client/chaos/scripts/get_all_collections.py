@@ -10,7 +10,7 @@ def save_all_checker_collections(host="127.0.0.1", prefix="Checker"):
     connections.connect(host=host, port="19530")
     all_collections = list_collections()
     if prefix is None:
-        all_collections = [c_name for c_name in all_collections]
+        all_collections = list(all_collections)
     else:
         all_collections = [c_name for c_name in all_collections if prefix in c_name]
     m = defaultdict(list)

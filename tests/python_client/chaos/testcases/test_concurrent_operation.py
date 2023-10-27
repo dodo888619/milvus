@@ -98,7 +98,7 @@ class TestOperations(TestBase):
 
     @pytest.fixture(scope="function", params=get_all_collections())
     def collection_name(self, request):
-        if request.param == [] or request.param == "":
+        if request.param in [[], ""]:
             pytest.skip("The collection name is invalid")
         yield request.param
 
@@ -115,12 +115,12 @@ class TestOperations(TestBase):
         if request_duration[-1] == "+":
             request_duration = request_duration[:-1]
         request_duration = eval(request_duration)
-        for i in range(10):
+        for _ in range(10):
             sleep(request_duration//10)
             for k, v in self.health_checkers.items():
                 v.check_result()
                 # log.info(v.check_result())
         if is_check:
             assert_statistic(self.health_checkers)
-            assert_expectations()        
+            assert_expectations()
         log.info("*********************Chaos Test Completed**********************")

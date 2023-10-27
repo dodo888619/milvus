@@ -84,7 +84,7 @@ class MilvusClient(object):
         # self._metric_type = None
 
     def __str__(self):
-        return 'Milvus collection %s' % self._collection_name
+        return f'Milvus collection {self._collection_name}'
 
     def set_collection(self, collection_name):
         """ Setting collection name """
@@ -137,7 +137,7 @@ class MilvusClient(object):
             "auto_id": auto_id}
         try:
             self._milvus.create_collection(collection_name, create_param)
-            logger.info("Create collection: <%s> successfully" % collection_name)
+            logger.info(f"Create collection: <{collection_name}> successfully")
         except Exception as e:
             logger.error(str(e))
             raise
@@ -214,8 +214,7 @@ class MilvusClient(object):
 
     @time_wrapper
     def get_entities(self, get_ids):
-        get_res = self._milvus.get_entity_by_id(self._collection_name, get_ids)
-        return get_res
+        return self._milvus.get_entity_by_id(self._collection_name, get_ids)
 
     @time_wrapper
     def delete(self, ids, collection_name=None):
@@ -254,16 +253,22 @@ class MilvusClient(object):
         """ only support "in" in expr """
         tmp_collection_name = self._collection_name if collection_name is None else collection_name
         # res = self._milvus.get(tmp_collection_name, ids, output_fields=None, partition_names=None)
-        ids_expr = "id in %s" % (str(ids))
-        res = self._milvus.query(tmp_collection_name, ids_expr, output_fields=None, partition_names=None, timeout=timeout)
-        return res
+        ids_expr = f"id in {str(ids)}"
+        return self._milvus.query(
+            tmp_collection_name,
+            ids_expr,
+            output_fields=None,
+            partition_names=None,
+            timeout=timeout,
+        )
 
     @time_wrapper
     def create_index(self, field_name, index_type, metric_type, _async=False, index_param=None):
         index_type = INDEX_MAP[index_type]
         metric_type = utils.metric_type_trans(metric_type)
-        logger.info("Building index start, collection_name: %s, index_type: %s, metric_type: %s" % (
-            self._collection_name, index_type, metric_type))
+        logger.info(
+            f"Building index start, collection_name: {self._collection_name}, index_type: {index_type}, metric_type: {metric_type}"
+        )
         if index_param:
             logger.info(index_param)
         index_params = {
@@ -289,7 +294,7 @@ class MilvusClient(object):
         return index_info
 
     def drop_index(self, field_name):
-        logger.info("Drop index: %s" % self._collection_name)
+        logger.info(f"Drop index: {self._collection_name}")
         return self._milvus.drop_index(self._collection_name, field_name)
 
     @time_wrapper
@@ -303,16 +308,7 @@ class MilvusClient(object):
         if guarantee_timestamp is not None:
             params.update({"guarantee_timestamp": guarantee_timestamp})
 
-        result = self._milvus.search(tmp_collection_name, **params)
-
-        # must_params = [vector_query]
-        # if filter_query:
-        #     must_params.extend(filter_query)
-        # query = {
-        #     "bool": {"must": must_params}
-        # }
-        # result = self._milvus.search(tmp_collection_name, query, timeout=timeout)
-        return result
+        return self._milvus.search(tmp_collection_name, **params)
 
     @time_wrapper
     def warm_query(self, index_field_name, search_param, metric_type, times=2):
@@ -329,11 +325,10 @@ class MilvusClient(object):
         #     "bool": {"must": must_params}
         # }
         logger.debug("Start warm up query")
-        for i in range(times):
+        for _ in range(times):
             params = util.search_param_analysis(vector_query, None)
             self._milvus.search(self._collection_name, **params)
 
-            # self._milvus.search(self._collection_name, query)
         logger.debug("End warm up query")
 
     @time_wrapper
@@ -347,22 +342,10 @@ class MilvusClient(object):
 
         params = util.search_param_analysis(vector_query, filter_query)
         params.update({"timeout": timeout})
-        result = self._milvus.search(tmp_collection_name, **params)
-
-        # result = self._milvus.search(tmp_collection_name, query, timeout=timeout)
-        return result
+        return self._milvus.search(tmp_collection_name, **params)
 
     def get_ids(self, result):
-        # idss = result._entities.ids
-        ids = []
-        # len_idss = len(idss)
-        # len_r = len(result)
-        # top_k = len_idss // len_r
-        # for offset in range(0, len_idss, top_k):
-        #     ids.append(idss[offset: min(offset + top_k, len_idss)])
-        for res in result:
-            ids.append(res.ids)
-        return ids
+        return [res.ids for res in result]
 
     def query_rand(self, nq_max=100, timeout=None):
         # for ivf search
@@ -420,20 +403,18 @@ class MilvusClient(object):
         loop_cunt = int(loop_cunt)
         if collection_name is None:
             collection_name = self._collection_name
-        logger.info("Start delete collection: %s" % collection_name)
+        logger.info(f"Start delete collection: {collection_name}")
         self._milvus.drop_collection(collection_name)
         i = 0
         while i < loop_cunt:
             try:
-                res = self._milvus.has_collection(collection_name)
-                if res:
-                    time.sleep(1)
-                    i = i + 1
-                    continue
-                else:
+                if not (res := self._milvus.has_collection(collection_name)):
                     break
+                time.sleep(1)
+                i += 1
+                continue
             except Exception as e:
-                logger.warning("Collection count failed: {}".format(str(e)))
+                logger.warning(f"Collection count failed: {str(e)}")
                 break
         if i >= loop_cunt:
             logger.error("Delete collection timeout")
@@ -452,8 +433,7 @@ class MilvusClient(object):
     def exists_collection(self, collection_name=None):
         if collection_name is None:
             collection_name = self._collection_name
-        res = self._milvus.has_collection(collection_name)
-        return res
+        return self._milvus.has_collection(collection_name)
 
     def clean_db(self):
         collection_names = self.show_collections()
@@ -501,26 +481,26 @@ class MilvusClient(object):
         5.drop collection
         """
 
-        logger.debug("[scene_test] Start scene test : %s" % collection_name)
+        logger.debug(f"[scene_test] Start scene test : {collection_name}")
         self.create_collection(dimension=128, collection_name=collection_name)
         time.sleep(1)
 
         collection_info = self.get_info(collection_name)
 
         entities = utils.generate_entities(collection_info, vectors, ids)
-        logger.debug("[scene_test] Start insert : %s" % collection_name)
+        logger.debug(f"[scene_test] Start insert : {collection_name}")
         self.insert(entities, collection_name=collection_name)
-        logger.debug("[scene_test] Start flush : %s" % collection_name)
+        logger.debug(f"[scene_test] Start flush : {collection_name}")
         self.flush(collection_name=collection_name)
 
-        logger.debug("[scene_test] Start create index : %s" % collection_name)
+        logger.debug(f"[scene_test] Start create index : {collection_name}")
         self.create_index(field_name='float_vector', index_type="ivf_sq8", metric_type='l2',
                           collection_name=collection_name, index_param={'nlist': 2048})
         time.sleep(59)
 
-        logger.debug("[scene_test] Start drop : %s" % collection_name)
+        logger.debug(f"[scene_test] Start drop : {collection_name}")
         self.drop(collection_name=collection_name)
-        logger.debug("[scene_test]Scene test close : %s" % collection_name)
+        logger.debug(f"[scene_test]Scene test close : {collection_name}")
 
     # TODO: remove
     # def get_server_version(self):

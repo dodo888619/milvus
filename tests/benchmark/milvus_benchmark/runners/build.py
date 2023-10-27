@@ -36,15 +36,11 @@ class BuildRunner(BaseRunner):
             "index_type": index_type,
             "index_param": index_param
         }
-        flush = True
-        if "flush" in collection and collection["flush"] == "no":
-            flush = False
+        flush = "flush" not in collection or collection["flush"] != "no"
         self.init_metric(self.name, collection_info, index_info, search_info=None)
         case_metric = copy.deepcopy(self.metric)
         case_metric.set_case_metric_type()
-        case_metrics = list()
-        case_params = list()
-        case_metrics.append(case_metric)
+        case_metrics = [case_metric]
         case_param = {
             "collection_name": collection_name,
             "data_type": data_type,
@@ -59,7 +55,7 @@ class BuildRunner(BaseRunner):
             "index_type": index_type,
             "index_param": index_param,
         }
-        case_params.append(case_param)
+        case_params = [case_param]
         return case_params, case_metrics
 
     def prepare(self, **case_param):
@@ -75,8 +71,7 @@ class BuildRunner(BaseRunner):
         self.milvus.create_index(index_field_name, case_param["index_type"], case_param["metric_type"],
                                  index_param=case_param["index_param"])
         build_time = round(time.time() - start_time, 2)
-        tmp_result = {"build_time": build_time}
-        return tmp_result
+        return {"build_time": build_time}
 
 
 class InsertBuildRunner(BuildRunner):

@@ -28,8 +28,7 @@ class TestChaosRG(TestcaseBase):
 
     def teardown_method(self, method):
         log.info(("*" * 35) + " teardown " + ("*" * 35))
-        log.info("[teardown_method] Start teardown test case %s..." %
-                 method.__name__)
+        log.info(f"[teardown_method] Start teardown test case {method.__name__}...")
         log.info("skip drop collection")
 
     @pytest.mark.tags(CaseLabel.L3)
@@ -58,7 +57,9 @@ class TestChaosRG(TestcaseBase):
         # verify RGs
         resource_groups, _ = self.utility_wrap.list_resource_groups()
         assert len(resource_groups) == len(resource_group_info)
-        assert all([rg_info["name"] in resource_groups for rg_info in resource_group_info])
+        assert all(
+            rg_info["name"] in resource_groups for rg_info in resource_group_info
+        )
         for rg_info in resource_group_info:
             rg_info = {"name": rg_info["name"],
                        "capacity": rg_info["capacity"],
@@ -132,7 +133,7 @@ class TestChaosRG(TestcaseBase):
             query_res, _ = collection_w.query(term_expr)
             assert len(query_res) == 100
 
-            delete_expr = f'{ct.default_int64_field_name} in {[i for i in range(100)]}'
+            delete_expr = f'{ct.default_int64_field_name} in {list(range(100))}'
             collection_w.delete(delete_expr)
             collection_w.query(term_expr, check_task=ct.CheckTasks.check_query_empty)
 
@@ -184,7 +185,7 @@ class TestChaosRG(TestcaseBase):
             log.info(f"{coll_name} replicas: {replicas}")
 
             # search
-            for i in range(100):
+            for _ in range(100):
                 search_vectors = cf.gen_vectors(ct.default_nq, ct.default_dim)
                 search_params = {"metric_type": "L2", "params": {"ef": 64}}
                 search_res, _ = collection_w.search(data=search_vectors,

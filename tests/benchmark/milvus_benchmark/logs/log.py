@@ -5,7 +5,7 @@ import yaml
 import config
 
 cur_path = os.path.abspath(os.path.dirname(__file__))
-LOG_CONFIG_PATH = cur_path + "/logging.yaml"
+LOG_CONFIG_PATH = f"{cur_path}/logging.yaml"
 FILE_NAME = config.LOG_PATH + 'benchmark-{:%Y-%m-%d}.log'.format(datetime.now())
 
 

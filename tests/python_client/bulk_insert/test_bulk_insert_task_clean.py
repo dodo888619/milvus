@@ -37,12 +37,11 @@ base_dir = "/tmp/bulk_insert_data"
 
 def entity_suffix(entities):
     if entities // 1000000 > 0:
-        suffix = f"{entities // 1000000}m"
+        return f"{entities // 1000000}m"
     elif entities // 1000 > 0:
-        suffix = f"{entities // 1000}k"
+        return f"{entities // 1000}k"
     else:
-        suffix = f"{entities}"
-    return suffix
+        return f"{entities}"
 
 
 class TestcaseBaseBulkInsert(TestcaseBase):
@@ -138,7 +137,7 @@ class TestBulkInsertTaskClean(TestcaseBaseBulkInsert):
             field_name=df.vec_field, index_params=index_params
         )
         self.collection_wrap.load()
-        log.info(f"wait for load finished and be ready for search")
+        log.info("wait for load finished and be ready for search")
         time.sleep(5)
         log.info(
             f"query seg info: {self.utility_wrap.get_query_segment_info(c_name)[0]}"
