@@ -27,14 +27,11 @@ def install_milvus(release_name):
     milvus_op.install(cus_configs)
     healthy = milvus_op.wait_for_healthy(release_name, namespace, timeout=1200)
     log.info(f"milvus healthy: {healthy}")
-    if healthy:
-        endpoint = milvus_op.endpoint(release_name, namespace).split(':')
-        log.info(f"milvus endpoint: {endpoint}")
-        host = endpoint[0]
-        port = endpoint[1]
-        return release_name, host, port
-    else:
+    if not healthy:
         return release_name, None, None
+    endpoint = milvus_op.endpoint(release_name, namespace).split(':')
+    log.info(f"milvus endpoint: {endpoint}")
+    return release_name, endpoint[0], endpoint[1]
 
 
 def scale_up_milvus(release_name):
@@ -46,14 +43,11 @@ def scale_up_milvus(release_name):
     milvus_op.upgrade(release_name, cus_configs, namespace=namespace)
     healthy = milvus_op.wait_for_healthy(release_name, namespace, timeout=1200)
     log.info(f"milvus healthy: {healthy}")
-    if healthy:
-        endpoint = milvus_op.endpoint(release_name, namespace).split(':')
-        log.info(f"milvus endpoint: {endpoint}")
-        host = endpoint[0]
-        port = endpoint[1]
-        return release_name, host, port
-    else:
+    if not healthy:
         return release_name, None, None
+    endpoint = milvus_op.endpoint(release_name, namespace).split(':')
+    log.info(f"milvus endpoint: {endpoint}")
+    return release_name, endpoint[0], endpoint[1]
 
 
 class TestAutoLoadBalance(object):
@@ -67,7 +61,7 @@ class TestAutoLoadBalance(object):
         """
 
         """
-        log.info(f"start to install milvus")
+        log.info("start to install milvus")
         release_name, host, port = install_milvus("test-auto-load-balance")  # todo add release name
         self.release_name = release_name
         assert host is not None

@@ -337,7 +337,7 @@ class TestMemoryStressReplica:
             search_res, _ = collection_w.search(cf.gen_vectors(1, dim=self.dim),
                                                 ct.default_float_vec_field_name, ct.default_search_params,
                                                 ct.default_limit, timeout=120)
-            assert 1 == len(search_res) and ct.default_limit == len(search_res[0])
+            assert len(search_res) == 1 and ct.default_limit == len(search_res[0])
             collection_w.release()
 
         except Exception as e:
@@ -443,14 +443,14 @@ class TestMemoryStressReplica:
         search_res, _ = collection_w.search(cf.gen_vectors(1, dim=self.dim),
                                             ct.default_float_vec_field_name, ct.default_search_params,
                                             ct.default_limit, timeout=120)
-        assert 1 == len(search_res) and ct.default_limit == len(search_res[0])
+        assert len(search_res) == 1 and ct.default_limit == len(search_res[0])
 
         collection_w.release()
         collection_w.load(replica_number=2)
         search_res, _ = collection_w.search(cf.gen_vectors(1, dim=self.dim),
                                             ct.default_float_vec_field_name, ct.default_search_params,
                                             ct.default_limit, timeout=120)
-        assert 1 == len(search_res) and ct.default_limit == len(search_res[0])
+        assert len(search_res) == 1 and ct.default_limit == len(search_res[0])
 
 
 @pytest.mark.tags(CaseLabel.L3)
@@ -540,7 +540,7 @@ class TestMemoryStressReplicaLoadBalance:
         search_res, _ = collection_w.search(cf.gen_vectors(1, dim=self.dim),
                                             ct.default_float_vec_field_name, ct.default_search_params,
                                             ct.default_limit, timeout=120)
-        assert 1 == len(search_res) and ct.default_limit == len(search_res[0])
+        assert len(search_res) == 1 and ct.default_limit == len(search_res[0])
 
     @pytest.mark.skip(reason="https://github.com/milvus-io/milvus/issues/16965")
     def test_memory_stress_replicas_cross_group_load_balance(self, prepare_collection):
@@ -596,7 +596,7 @@ class TestMemoryStressReplicaLoadBalance:
         search_res, _ = collection_w.search(cf.gen_vectors(1, dim=self.dim),
                                             ct.default_float_vec_field_name, ct.default_search_params,
                                             ct.default_limit, timeout=120)
-        assert 1 == len(search_res) and ct.default_limit == len(search_res[0])
+        assert len(search_res) == 1 and ct.default_limit == len(search_res[0])
 
     @pytest.mark.skip(reason="https://github.com/milvus-io/milvus/issues/16995")
     @pytest.mark.tags(CaseLabel.L3)
@@ -645,4 +645,4 @@ class TestMemoryStressReplicaLoadBalance:
         search_res, _ = collection_w.search(cf.gen_vectors(1, dim=self.dim),
                                             ct.default_float_vec_field_name, ct.default_search_params,
                                             ct.default_limit, timeout=120)
-        assert 1 == len(search_res) and ct.default_limit == len(search_res[0])
+        assert len(search_res) == 1 and ct.default_limit == len(search_res[0])

@@ -33,12 +33,11 @@ base_dir = "/tmp/bulk_insert_data"
 
 def entity_suffix(entities):
     if entities // 1000000 > 0:
-        suffix = f"{entities // 1000000}m"
+        return f"{entities // 1000000}m"
     elif entities // 1000 > 0:
-        suffix = f"{entities // 1000}k"
+        return f"{entities // 1000}k"
     else:
-        suffix = f"{entities}"
-    return suffix
+        return f"{entities}"
 
 
 class TestcaseBaseBulkInsert(TestcaseBase):
@@ -123,7 +122,7 @@ class TestBulkInsert(TestcaseBaseBulkInsert):
         log.info(f"index building progress: {res}")
         self.collection_wrap.load()
         self.collection_wrap.load(_refresh=True)
-        log.info(f"wait for load finished and be ready for search")
+        log.info("wait for load finished and be ready for search")
         time.sleep(2)
         log.info(
             f"query seg info: {self.utility_wrap.get_query_segment_info(c_name)[0]}"
@@ -207,7 +206,7 @@ class TestBulkInsert(TestcaseBaseBulkInsert):
         log.info(f"index building progress: {res}")
         self.collection_wrap.load()
         self.collection_wrap.load(_refresh=True)
-        log.info(f"wait for load finished and be ready for search")
+        log.info("wait for load finished and be ready for search")
         time.sleep(2)
         log.info(
             f"query seg info: {self.utility_wrap.get_query_segment_info(c_name)[0]}"
@@ -302,7 +301,7 @@ class TestBulkInsert(TestcaseBaseBulkInsert):
         self.utility_wrap.wait_for_index_building_complete(c_name, timeout=120)
         res, _ = self.utility_wrap.index_building_progress(c_name)
         log.info(f"index building progress: {res}")
-        log.info(f"wait for load finished and be ready for search")
+        log.info("wait for load finished and be ready for search")
         self.collection_wrap.load(_refresh=True)
         time.sleep(2)
         log.info(
@@ -393,7 +392,7 @@ class TestBulkInsert(TestcaseBaseBulkInsert):
         # verify num entities
         assert self.collection_wrap.num_entities == entities
         # verify search and query
-        log.info(f"wait for load finished and be ready for search")
+        log.info("wait for load finished and be ready for search")
         self.collection_wrap.load(_refresh=True)
         time.sleep(2)
         search_data = cf.gen_binary_vectors(1, dim)[1]
@@ -444,10 +443,9 @@ class TestBulkInsert(TestcaseBaseBulkInsert):
             cf.gen_float_vec_field(name=df.vec_field, dim=dim),
         ]
         data = [
-            [i for i in range(direct_insert_row)],
+            list(range(direct_insert_row)),
             [np.float32(i) for i in range(direct_insert_row)],
             cf.gen_vectors(direct_insert_row, dim=dim),
-
         ]
         schema = cf.gen_collection_schema(fields=fields)
         self.collection_wrap.init_collection(c_name, schema=schema)
@@ -488,7 +486,7 @@ class TestBulkInsert(TestcaseBaseBulkInsert):
         res, _ = self.utility_wrap.index_building_progress(c_name)
         log.info(f"index building progress: {res}")
         # verify search and query
-        log.info(f"wait for load finished and be ready for search")
+        log.info("wait for load finished and be ready for search")
         self.collection_wrap.load(_refresh=True)
         time.sleep(2)
         nq = 3
@@ -577,7 +575,7 @@ class TestBulkInsert(TestcaseBaseBulkInsert):
         res, _ = self.utility_wrap.index_building_progress(c_name)
         log.info(f"index building progress: {res}")
         # verify search and query
-        log.info(f"wait for load finished and be ready for search")
+        log.info("wait for load finished and be ready for search")
         self.collection_wrap.load(_refresh=True)
         time.sleep(2)
         nq = 3
@@ -655,7 +653,7 @@ class TestBulkInsert(TestcaseBaseBulkInsert):
             field_name=df.vec_field, index_params=index_params
         )
         self.collection_wrap.load()
-        log.info(f"wait for load finished and be ready for search")
+        log.info("wait for load finished and be ready for search")
         time.sleep(2)
         # log.info(f"query seg info: {self.utility_wrap.get_query_segment_info(c_name)[0]}")
         search_data = cf.gen_vectors(1, dim)
@@ -705,7 +703,7 @@ class TestBulkInsert(TestcaseBaseBulkInsert):
         self.collection_wrap.load()
         data_fields = [f.name for f in fields if not f.to_dict().get("auto_id", False)]
         task_ids = []
-        for i in range(file_nums):
+        for _ in range(file_nums):
             files = prepare_bulk_insert_numpy_files(
                 minio_endpoint=self.minio_endpoint,
                 bucket_name=self.bucket_name,
@@ -729,7 +727,7 @@ class TestBulkInsert(TestcaseBaseBulkInsert):
         assert self.collection_wrap.num_entities == entities * file_nums
 
         # verify search and query
-        log.info(f"wait for load finished and be ready for search")
+        log.info("wait for load finished and be ready for search")
         self.collection_wrap.load(_refresh=True)
         time.sleep(2)
         search_data = cf.gen_vectors(1, dim)

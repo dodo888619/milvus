@@ -51,53 +51,53 @@ class MilvusSys:
     @property
     def query_nodes(self):
         """get all query nodes in Milvus deployment"""
-        query_nodes = []
-        for node in self.nodes:
-            if 'querynode' == node.get('infos').get('type'):
-                query_nodes.append(node)
-        return query_nodes
+        return [
+            node
+            for node in self.nodes
+            if node.get('infos').get('type') == 'querynode'
+        ]
 
     @property
     def data_nodes(self):
         """get all data nodes in Milvus deployment"""
-        data_nodes = []
-        for node in self.nodes:
-            if 'datanode' == node.get('infos').get('type'):
-                data_nodes.append(node)
-        return data_nodes
+        return [
+            node
+            for node in self.nodes
+            if node.get('infos').get('type') == 'datanode'
+        ]
 
     @property
     def index_nodes(self):
         """get all index nodes in Milvus deployment"""
-        index_nodes = []
-        for node in self.nodes:
-            if 'indexnode' == node.get('infos').get('type'):
-                index_nodes.append(node)
-        return index_nodes
+        return [
+            node
+            for node in self.nodes
+            if node.get('infos').get('type') == 'indexnode'
+        ]
 
     @property
     def proxy_nodes(self):
         """get all proxy nodes in Milvus deployment"""
-        proxy_nodes = []
-        for node in self.nodes:
-            if 'proxy' == node.get('infos').get('type'):
-                proxy_nodes.append(node)
-        return proxy_nodes
+        return [
+            node for node in self.nodes if node.get('infos').get('type') == 'proxy'
+        ]
 
     @property
     def nodes(self):
         """get all the nodes in Milvus deployment"""
         all_nodes = json.loads(self.sys_info.response).get('nodes_info')
-        online_nodes = [node for node in all_nodes if node["infos"]["has_error"] is False]
-        return online_nodes
+        return [node for node in all_nodes if node["infos"]["has_error"] is False]
 
     def get_nodes_by_type(self, node_type=None):
         """get milvus nodes by node type"""
         target_nodes = []
         if node_type is not None:
-            for node in self.nodes:
-                if str(node_type).lower() == str(node.get('infos').get('type')).lower():
-                    target_nodes.append(node)
+            target_nodes.extend(
+                node
+                for node in self.nodes
+                if str(node_type).lower()
+                == str(node.get('infos').get('type')).lower()
+            )
         return target_nodes
 
 

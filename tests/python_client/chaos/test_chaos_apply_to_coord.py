@@ -130,10 +130,10 @@ class TestChaosApply:
         activate_pod_list_after_chaos, standby_pod_list_after_chaos = find_activate_standby_coord_pod(self.milvus_ns, self.release_name,
                                                                                                       target_component)
         log.info(f"activated pod list: {activate_pod_list_after_chaos}, standby pod list: {standby_pod_list_after_chaos}")
-        if role_type == "standby":
-            # if the standby pod is injected, the activated pod should not be changed
-            assert activate_pod_list_after_chaos[0] == activate_pod_list[0]
         if role_type == "activated":
             # if the activated pod is injected, the one of standby pods should be changed to activated
             assert activate_pod_list_after_chaos[0] in standby_pod_list
+        elif role_type == "standby":
+            # if the standby pod is injected, the activated pod should not be changed
+            assert activate_pod_list_after_chaos[0] == activate_pod_list[0]
         log.info("*********************Chaos Test Completed**********************")

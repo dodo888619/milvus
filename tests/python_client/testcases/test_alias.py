@@ -31,7 +31,7 @@ class TestAliasParamsInvalid(TestcaseBase):
     """ Negative test cases of alias interface parameters"""
 
     @pytest.mark.tags(CaseLabel.L1)
-    @pytest.mark.parametrize("alias_name", ["12-s", "12 s", "(mn)", "中文", "%$#", "a".join("a" for i in range(256))])
+    @pytest.mark.parametrize("alias_name", ["12-s", "12 s", "(mn)", "中文", "%$#", "a".join("a" for _ in range(256))])
     def test_alias_create_alias_with_invalid_name(self, alias_name):
         """
         target: test alias inserting data
@@ -216,7 +216,7 @@ class TestAliasOperation(TestcaseBase):
                                                                    check_task=CheckTasks.check_collection_property,
                                                                    check_items={exp_name: alias_name,
                                                                                 exp_schema: default_schema})
-        
+
         # create partition by alias
         partition_name = cf.gen_unique_str("partition")
         try:
@@ -225,11 +225,14 @@ class TestAliasOperation(TestcaseBase):
             log.info(f"alias create partition failed with exception {e}")
             create_partition_flag = False
             collection_w.create_partition(partition_name)
-        
+
         # assert partition
-        pytest.assume(create_partition_flag is True and
-                      [p.name for p in collection_alias.partitions] == [p.name for p in collection_w.partitions])
-        
+        pytest.assume(
+            create_partition_flag
+            and [p.name for p in collection_alias.partitions]
+            == [p.name for p in collection_w.partitions]
+        )
+
         # insert data by alias
         df = cf.gen_default_dataframe_data(ct.default_nb)
         try:
@@ -238,11 +241,13 @@ class TestAliasOperation(TestcaseBase):
             log.info(f"alias insert data failed with exception {e}")
             insert_data_flag = False
             collection_w.insert(data=df)
-        
+
         # assert insert data
-        pytest.assume(insert_data_flag is True and
-                      collection_w.num_entities == ct.default_nb and
-                      collection_alias.num_entities == ct.default_nb)
+        pytest.assume(
+            insert_data_flag
+            and collection_w.num_entities == ct.default_nb
+            and collection_alias.num_entities == ct.default_nb
+        )
 
         # create index by alias
         default_index = {"index_type": "IVF_FLAT", "params": {"nlist": 128}, "metric_type": "L2"}
@@ -252,12 +257,14 @@ class TestAliasOperation(TestcaseBase):
             log.info(f"alias create index failed with exception {e}")
             create_index_flag = False
             collection_w.create_index(field_name="float_vector", index_params=default_index)
-        
+
         # assert create index
-        pytest.assume(create_index_flag is True and
-                      collection_alias.has_index() is True and
-                      collection_w.has_index()[0] is True)
-        
+        pytest.assume(
+            create_index_flag
+            and collection_alias.has_index() is True
+            and collection_w.has_index()[0] is True
+        )
+
         # load by alias
         try:
             collection_alias.load()
@@ -266,12 +273,12 @@ class TestAliasOperation(TestcaseBase):
             load_collection_flag = False
             collection_w.load()
         # assert load
-        pytest.assume(load_collection_flag is True)
+        pytest.assume(load_collection_flag)
 
         # search by alias
         topK = 5
         search_params = {"metric_type": "L2", "params": {"nprobe": 10}}
-             
+
         query = [[random.random() for _ in range(ct.default_dim)] for _ in range(1)]
         alias_res = None
         try:
@@ -282,13 +289,13 @@ class TestAliasOperation(TestcaseBase):
         except Exception as e:
             log.info(f"alias search failed with exception {e}")
             search_flag = False
-          
+
         collection_res, _ = collection_w.search(
             query, "float_vector", search_params, topK,
             "int64 >= 0", output_fields=["int64"]
         )
         # assert search
-        pytest.assume(search_flag is True and alias_res[0].ids == collection_res[0].ids)
+        pytest.assume(search_flag and alias_res[0].ids == collection_res[0].ids)
 
         # release by alias
         try:
@@ -298,7 +305,7 @@ class TestAliasOperation(TestcaseBase):
             release_collection_flag = False
             collection_w.release()
         # assert release
-        pytest.assume(release_collection_flag is True)
+        pytest.assume(release_collection_flag)
 
     @pytest.mark.tags(CaseLabel.L1)
     def test_alias_called_by_utility_has_collection(self):

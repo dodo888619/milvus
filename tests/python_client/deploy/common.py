@@ -9,15 +9,12 @@ default_index_params = [{"nlist": 128}, {"nlist": 128}, {"nlist": 128}, {"nlist"
 index_params_map = dict(zip(all_index_types, default_index_params))
 
 def gen_index_param(index_type):
-    metric_type = "L2"
-    if "BIN" in index_type:
-        metric_type = "HAMMING"
-    index_param = {
+    metric_type = "HAMMING" if "BIN" in index_type else "L2"
+    return {
         "index_type": index_type,
         "params": index_params_map[index_type],
-        "metric_type": metric_type
+        "metric_type": metric_type,
     }
-    return index_param
 
 
 def gen_search_param(index_type, metric_type="L2"):

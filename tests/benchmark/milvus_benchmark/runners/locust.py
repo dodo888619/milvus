@@ -30,7 +30,7 @@ class LocustRunner(BaseRunner):
             "dimension": case_param["dimension"],
             "collection_info": self.milvus.get_info(collection_name)}
         logger.info(info_in_params)
-        run_params.update({"op_info": info_in_params})
+        run_params["op_info"] = info_in_params
         for task_type in task_types:
             run_params["tasks"].update({
                     task_type["type"]: {
@@ -41,9 +41,13 @@ class LocustRunner(BaseRunner):
         # collect stats
         # pdb.set_trace()
         logger.info(run_params)
-        locust_stats = locust_user.locust_executor(self.hostname, self.port, collection_name,
-                                                   connection_type=connection_type, run_params=run_params)
-        return locust_stats
+        return locust_user.locust_executor(
+            self.hostname,
+            self.port,
+            collection_name,
+            connection_type=connection_type,
+            run_params=run_params,
+        )
 
 
 class LocustInsertRunner(LocustRunner):
@@ -83,10 +87,8 @@ class LocustInsertRunner(LocustRunner):
             }
             index_field_name = runner_utils.get_default_field_name(vector_type)
         task = collection["task"]
-        connection_type = "single"
         connection_num = task["connection_num"]
-        if connection_num > 1:
-            connection_type = "multi"
+        connection_type = "multi" if connection_num > 1 else "single"
         run_params = {
             "task": collection["task"],
             "connection_type": connection_type,
@@ -95,9 +97,7 @@ class LocustInsertRunner(LocustRunner):
         case_metric = copy.deepcopy(self.metric)
         # set metric type as case
         case_metric.set_case_metric_type()
-        case_metrics = list()
-        case_params = list()
-        case_metrics.append(case_metric)
+        case_metrics = [case_metric]
         case_param = {
             "collection_name": collection_name,
             "data_type": data_type,
@@ -115,7 +115,7 @@ class LocustInsertRunner(LocustRunner):
             "task": collection["task"],
             "connection_type": connection_type,
         }
-        case_params.append(case_param)
+        case_params = [case_param]
         return case_params, case_metrics
 
     def prepare(self, **case_param):
@@ -187,10 +187,8 @@ class LocustSearchRunner(LocustRunner):
             index_field_name = runner_utils.get_default_field_name(vector_type)
         vector_field_name = runner_utils.get_default_field_name(vector_type)
         task = collection["task"]
-        connection_type = "single"
         connection_num = task["connection_num"]
-        if connection_num > 1:
-            connection_type = "multi"
+        connection_type = "multi" if connection_num > 1 else "single"
         run_params = {
             "task": collection["task"],
             "connection_type": connection_type,
@@ -199,9 +197,7 @@ class LocustSearchRunner(LocustRunner):
         case_metric = copy.deepcopy(self.metric)
         # set metric type as case
         case_metric.set_case_metric_type()
-        case_metrics = list()
-        case_params = list()
-        case_metrics.append(case_metric)
+        case_metrics = [case_metric]
         case_param = {
             "collection_name": collection_name,
             "data_type": data_type,
@@ -219,7 +215,7 @@ class LocustSearchRunner(LocustRunner):
             "task": collection["task"],
             "connection_type": connection_type,
         }
-        case_params.append(case_param)
+        case_params = [case_param]
         return case_params, case_metrics
 
     def prepare(self, **case_param):
@@ -317,10 +313,8 @@ class LocustRandomRunner(LocustRunner):
             }
             index_field_name = runner_utils.get_default_field_name(vector_type)
         task = collection["task"]
-        connection_type = "single"
         connection_num = task["connection_num"]
-        if connection_num > 1:
-            connection_type = "multi"
+        connection_type = "multi" if connection_num > 1 else "single"
         run_params = {
             "task": collection["task"],
             "connection_type": connection_type,
@@ -328,9 +322,7 @@ class LocustRandomRunner(LocustRunner):
         self.init_metric(self.name, collection_info, index_info, None, run_params)
         case_metric = copy.deepcopy(self.metric)
         case_metric.set_case_metric_type()
-        case_metrics = list()
-        case_params = list()
-        case_metrics.append(case_metric)
+        case_metrics = [case_metric]
         case_param = {
             "collection_name": collection_name,
             "data_type": data_type,
@@ -348,7 +340,7 @@ class LocustRandomRunner(LocustRunner):
             "task": collection["task"],
             "connection_type": connection_type,
         }
-        case_params.append(case_param)
+        case_params = [case_param]
         return case_params, case_metrics
 
     def prepare(self, **case_param):

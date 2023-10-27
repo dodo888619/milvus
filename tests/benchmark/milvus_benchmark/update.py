@@ -21,12 +21,8 @@ def parse_server_tag(server_tag):
         raise Exception("Unable to parse server tag")
     m = re.match(p, server_tag)
     cpus = int(m.groups()[0])
-    mems = None
-    gpus = None
-    if len(m.groups()) > 1:
-        mems = int(m.groups()[1])
-    if len(m.groups()) > 2:
-        gpus = int(m.groups()[2])
+    mems = int(m.groups()[1]) if len(m.groups()) > 1 else None
+    gpus = int(m.groups()[2]) if len(m.groups()) > 2 else None
     return {"cpus": cpus, "mems": mems, "gpus": gpus}
 
 
@@ -55,7 +51,7 @@ def update_values(src_values_file, deploy_params_file):
         raise Exception("File not found")
 
     deploy_mode = utils.get_deploy_mode(deploy_params)
-    print("[benchmark update] deploy_mode: %s" % str(deploy_mode))
+    print(f"[benchmark update] deploy_mode: {str(deploy_mode)}")
 
     cluster = False
     if deploy_mode in [config.CLUSTER_DEPLOY_MODE, config.CLUSTER_3RD_DEPLOY_MODE]:
@@ -83,28 +79,22 @@ def update_values(src_values_file, deploy_params_file):
         gpus = res["gpus"]
     if cpus:
         resources = {
-            "limits": {
-                "cpu": str(int(cpus)) + ".0"
-            },
-            "requests": {
-                "cpu": str(int(cpus) // 2 + 1) + ".0"
-            }
+            "limits": {"cpu": f"{int(cpus)}.0"},
+            "requests": {"cpu": f"{str(int(cpus) // 2 + 1)}.0"},
         }
-    if cpus and mems:
-        resources_cluster = {
-            "limits": {
-                "cpu": str(int(cpus)) + ".0",
-                "memory": str(int(mems)) + "Gi"
-            },
-            "requests": {
-                "cpu": str(int(cpus) // 2 + 1) + ".0",
-                "memory": str(int(mems) // 2 + 1) + "Gi"
-                # "cpu": "4.0"
-                # "cpu": str(int(cpus) - 1) + ".0"
+        if mems:
+            resources_cluster = {
+                "limits": {
+                    "cpu": f"{int(cpus)}.0",
+                    "memory": f"{int(mems)}Gi",
+                },
+                "requests": {
+                    "cpu": f"{str(int(cpus) // 2 + 1)}.0",
+                    "memory": f"{str(int(mems) // 2 + 1)}Gi",
+                },
             }
-        }
     # use external minio/s3
-    
+
     # TODO: disable temp
     values_dict['minio']['enabled'] = True
     # values_dict["externalS3"]["enabled"] = True
@@ -116,7 +106,7 @@ def update_values(src_values_file, deploy_params_file):
     values_dict["externalS3"]["bucketName"] = config.MINIO_BUCKET_NAME
     logging.debug(values_dict["externalS3"])
 
-    if cluster is False:
+    if not cluster:
         # TODO: support pod affinity for standalone mode
         if cpus:
             # values_dict['standalone']['nodeSelector'] = node_config
@@ -125,8 +115,12 @@ def update_values(src_values_file, deploy_params_file):
             # # set limit/request cpus in resources
             values_dict['standalone']['resources'] = resources
         if mems:
-            values_dict['standalone']['resources']["limits"].update({"memory": str(int(mems)) + "Gi"})
-            values_dict['standalone']['resources']["requests"].update({"memory": str(int(mems) // 2 + 1) + "Gi"})
+            values_dict['standalone']['resources']["limits"].update(
+                {"memory": f"{int(mems)}Gi"}
+            )
+            values_dict['standalone']['resources']["requests"].update(
+                {"memory": f"{str(int(mems) // 2 + 1)}Gi"}
+            )
         if gpus:
             logging.info("TODO: Need to schedule pod on GPU server")
         logging.debug("Add tolerations into standalone server")
@@ -150,7 +144,7 @@ def update_values(src_values_file, deploy_params_file):
             # values_dict['pulsarStandalone']['resources'] = resources
         if mems:
             logging.debug("TODO: Update mem resources")
-        
+
         logging.debug("Add tolerations into cluster server")
         values_dict['proxy']['tolerations'] = perf_tolerations
         values_dict['queryNode']['tolerations'] = perf_tolerations
@@ -200,7 +194,7 @@ def update_values(src_values_file, deploy_params_file):
     }]
 
     server_resource = utils.get_server_resource(deploy_params)
-    print("[benchmark update] server_resource: %s" % str(server_resource))
+    print(f"[benchmark update] server_resource: {str(server_resource)}")
     values_dict = utils.update_dict_value(server_resource, values_dict)
 
     print(values_dict)

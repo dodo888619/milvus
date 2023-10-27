@@ -38,8 +38,8 @@ class AccuracyRunner(BaseRunner):
         guarantee_timestamp = collection["guarantee_timestamp"] if "guarantee_timestamp" in collection else None
         search_params = collection["search_params"]
         search_params = utils.generate_combinations(search_params)
-        cases = list()
-        case_metrics = list()
+        cases = []
+        case_metrics = []
         self.init_metric(self.name, collection_info, index_info, search_info=None)
         for search_param in search_params:
             if not filters:
@@ -53,7 +53,7 @@ class AccuracyRunner(BaseRunner):
                     filter_query.append(eval(filter["term"]))
                     filter_param.append(filter["term"])
                 for nq in nqs:
-                    query_vectors = base_query_vectors[0:nq]
+                    query_vectors = base_query_vectors[:nq]
                     for top_k in top_ks:
                         search_info = {
                             "topk": top_k,
@@ -106,8 +106,7 @@ class AccuracyRunner(BaseRunner):
         result_ids = self.milvus.get_ids(query_res)
         logger.debug({"result_ids": len(result_ids[0])})
         acc_value = utils.get_recall_value(true_ids[:nq, :top_k].tolist(), result_ids)
-        tmp_result = {"acc": acc_value}
-        return tmp_result
+        return {"acc": acc_value}
 
 
 class AccAccuracyRunner(AccuracyRunner):
@@ -145,8 +144,8 @@ class AccAccuracyRunner(AccuracyRunner):
         # Convert list data into a set of dictionary data
         search_params = utils.generate_combinations(search_params)
         index_params = utils.generate_combinations(index_params)
-        cases = list()
-        case_metrics = list()
+        cases = []
+        case_metrics = []
         self.init_metric(self.name, collection_info, {}, search_info=None)
 
         # true_ids: The data set used to verify the results returned by query
@@ -219,10 +218,10 @@ class AccAccuracyRunner(AccuracyRunner):
         index_type = case_param["index_type"]
         index_param = case_param["index_param"]
         index_field_name = case_param["index_field_name"]
-        
+
         self.milvus.set_collection(collection_name)
         if self.milvus.exists_collection(collection_name):
-            logger.info("Re-create collection: %s" % collection_name)
+            logger.info(f"Re-create collection: {collection_name}")
             self.milvus.drop()
         dataset = case_param["dataset"]
         self.milvus.create_collection(dimension, data_type=vector_type)
@@ -242,13 +241,12 @@ class AccAccuracyRunner(AccuracyRunner):
             if start < end:
                 # Insert up to INSERT_INTERVAL=50000 at a time
                 tmp_vectors = insert_vectors[start:end]
-                ids = [i for i in range(start, end)]
+                ids = list(range(start, end))
                 if not isinstance(tmp_vectors, list):
                     entities = utils.generate_entities(info, tmp_vectors.tolist(), ids)
-                    res_ids = self.milvus.insert(entities)
                 else:
                     entities = utils.generate_entities(tmp_vectors, ids)
-                    res_ids = self.milvus.insert(entities)
+                res_ids = self.milvus.insert(entities)
                 assert res_ids == ids
         logger.debug("End insert, start flush")
         self.milvus.flush()
@@ -259,13 +257,13 @@ class AccAccuracyRunner(AccuracyRunner):
             raise Exception("Table row count is not equal to insert vectors")
         if self.milvus.describe_index(index_field_name):
             self.milvus.drop_index(index_field_name)
-            logger.info("Re-create index: %s" % collection_name)
+            logger.info(f"Re-create index: {collection_name}")
         self.milvus.create_index(index_field_name, index_type, metric_type, index_param=index_param)
         logger.info(self.milvus.describe_index(index_field_name))
-        logger.info("Start load collection: %s" % collection_name)
+        logger.info(f"Start load collection: {collection_name}")
         # self.milvus.release_collection()
         self.milvus.load_collection(timeout=600)
-        logger.info("End load collection: %s" % collection_name)
+        logger.info(f"End load collection: {collection_name}")
 
     def run_case(self, case_metric, **case_param):
         true_ids = case_param["true_ids"]
@@ -284,9 +282,7 @@ class AccAccuracyRunner(AccuracyRunner):
         result_ids = self.milvus.get_ids(query_res)
         # Calculate the accuracy of the result of query
         acc_value = utils.get_recall_value(true_ids[:nq, :top_k].tolist(), result_ids)
-        tmp_result = {"acc": acc_value}
-        # Return accuracy results for reporting
-        return tmp_result
+        return {"acc": acc_value}
 
 
 class AsyncThroughputRunner(AccuracyRunner):

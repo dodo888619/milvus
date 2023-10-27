@@ -23,7 +23,7 @@ namespace = 'chaos-testing'
 
 
 def _install_milvus(simd):
-    release_name = f"mil-{simd.replace('_','-')}-" + cf.gen_digits_by_length(6)
+    release_name = f"mil-{simd.replace('_', '-')}-{cf.gen_digits_by_length(6)}"
     cus_configs = {'spec.components.image': 'milvusdb/milvus:master-latest',
                    'metadata.namespace': namespace,
                    'metadata.name': release_name,
@@ -35,14 +35,11 @@ def _install_milvus(simd):
     milvus_op.install(cus_configs)
     healthy = milvus_op.wait_for_healthy(release_name, namespace, timeout=1200)
     log.info(f"milvus healthy: {healthy}")
-    if healthy:
-        endpoint = milvus_op.endpoint(release_name, namespace).split(':')
-        log.info(f"milvus endpoint: {endpoint}")
-        host = endpoint[0]
-        port = endpoint[1]
-        return release_name, host, port
-    else:
+    if not healthy:
         return release_name, None, None
+    endpoint = milvus_op.endpoint(release_name, namespace).split(':')
+    log.info(f"milvus endpoint: {endpoint}")
+    return release_name, endpoint[0], endpoint[1]
 
 
 class TestSimdCompatibility:
@@ -52,7 +49,7 @@ class TestSimdCompatibility:
         milvus_op.uninstall(self.release_name, namespace)
 
     @pytest.mark.tags(CaseLabel.L3)
-    @pytest.mark.parametrize('simd_id', [i for i in range(len(supported_simd_types))])
+    @pytest.mark.parametrize('simd_id', list(range(len(supported_simd_types))))
     def test_simd_compat_e2e(self, simd_id):
         """
        steps

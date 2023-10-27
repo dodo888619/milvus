@@ -26,7 +26,7 @@ def timestr_to_int(time_str):
     elif time_str.endswith("h"):
         time_int = int(time_str.split("h")[0]) * 60 * 60
     else:
-        raise Exception("%s not support" % time_str)
+        raise Exception(f"{time_str} not support")
     return time_int
 
 
@@ -121,15 +121,13 @@ def get_deploy_mode(deploy_params):
     """
     deploy_mode = None
     if deploy_params:
-        milvus_params = None
-        if "milvus" in deploy_params:
-            milvus_params = deploy_params["milvus"]
+        milvus_params = deploy_params["milvus"] if "milvus" in deploy_params else None
         if not milvus_params:
             deploy_mode = config.DEFUALT_DEPLOY_MODE
         elif "deploy_mode" in milvus_params:
             deploy_mode = milvus_params["deploy_mode"]
             if deploy_mode not in [config.SINGLE_DEPLOY_MODE, config.CLUSTER_DEPLOY_MODE, config.CLUSTER_3RD_DEPLOY_MODE]:
-                raise Exception("Invalid deploy mode: %s" % deploy_mode)
+                raise Exception(f"Invalid deploy mode: {deploy_mode}")
     return deploy_mode
 
 
@@ -148,10 +146,11 @@ def get_server_tag(deploy_params):
 
 
 def get_server_resource(deploy_params):
-    server_resource = {}
-    if deploy_params and "server_resource" in deploy_params:
-        server_resource = deploy_params["server_resource"]
-    return server_resource
+    return (
+        deploy_params["server_resource"]
+        if deploy_params and "server_resource" in deploy_params
+        else {}
+    )
 
 
 def dict_update(source, target):
@@ -167,9 +166,7 @@ def update_dict_value(server_resource, values_dict):
     if not isinstance(server_resource, dict) or not isinstance(values_dict, dict):
         return values_dict
 
-    target = dict_update(server_resource, values_dict)
-
-    return target
+    return dict_update(server_resource, values_dict)
 
 
 def search_param_analysis(vector_query, filter_query):
@@ -193,7 +190,9 @@ def search_param_analysis(vector_query, filter_query):
                      "params": vector[key]["params"]}
             limit = vector[key]["topk"]
     else:
-        logger.error("[search_param_analysis] vector not dict or len != 1: %s" % str(vector))
+        logger.error(
+            f"[search_param_analysis] vector not dict or len != 1: {str(vector)}"
+        )
         return False
 
     expression = None
@@ -204,29 +203,23 @@ def search_param_analysis(vector_query, filter_query):
                 field_name = filter_range[key]
                 expression = None
                 if 'GT' in filter_range[key]:
-                    exp1 = "%s > %s" % (field_name, str(filter_range[key]['GT']))
+                    exp1 = f"{field_name} > {str(filter_range[key]['GT'])}"
                     expression = exp1
                 if 'LT' in filter_range[key]:
-                    exp2 = "%s < %s" % (field_name, str(filter_range[key]['LT']))
-                    if expression:
-                        expression = expression + ' && ' + exp2
-                    else:
-                        expression = exp2
+                    exp2 = f"{field_name} < {str(filter_range[key]['LT'])}"
+                    expression = f'{expression} && {exp2}' if expression else exp2
         else:
-            logger.error("[search_param_analysis] filter_range not dict or len != 1: %s" % str(filter_range))
+            logger.error(
+                f"[search_param_analysis] filter_range not dict or len != 1: {str(filter_range)}"
+            )
             return False
-    # else:
-        # logger.debug("[search_param_analysis] range not in filter_query: %s" % str(filter_query))
-        # expression = None
-
-    result = {
+    return {
         "data": data,
         "anns_field": anns_field,
         "param": param,
         "limit": limit,
-        "expression": expression
+        "expression": expression,
     }
-    return result
 
 
 def modify_file(file_path_list, is_modify=False, input_content=""):
@@ -241,21 +234,20 @@ def modify_file(file_path_list, is_modify=False, input_content=""):
     for file_path in file_path_list:
         folder_path, file_name = os.path.split(file_path)
         if not os.path.isdir(folder_path):
-            print("[modify_file] folder(%s) is not exist." % folder_path)
+            print(f"[modify_file] folder({folder_path}) is not exist.")
             os.makedirs(folder_path)
 
         if not os.path.isfile(file_path):
-            print("[modify_file] file(%s) is not exist." % file_path)
+            print(f"[modify_file] file({file_path}) is not exist.")
             os.mknod(file_path)
-        else:
-            if is_modify is True:
-                print("[modify_file] start modifying file(%s)..." % file_path)
-                with open(file_path, "r+") as f:
-                    f.seek(0)
-                    f.truncate()
-                    f.write(input_content)
-                    f.close()
-                print("[modify_file] file(%s) modification is complete." % file_path_list)
+        elif is_modify is True:
+            print(f"[modify_file] start modifying file({file_path})...")
+            with open(file_path, "r+") as f:
+                f.seek(0)
+                f.truncate()
+                f.write(input_content)
+                f.close()
+            print(f"[modify_file] file({file_path_list}) modification is complete.")
 
 
 def read_json_file(file_name):
@@ -278,10 +270,12 @@ def get_token(url):
 
 
 def get_tags(url, token):
-    headers = {'Content-type': "application/json",
-               "charset": "UTF-8",
-               "Accept": "application/vnd.docker.distribution.manifest.v2+json",
-               "Authorization": "Bearer %s" % token}
+    headers = {
+        'Content-type': "application/json",
+        "charset": "UTF-8",
+        "Accept": "application/vnd.docker.distribution.manifest.v2+json",
+        "Authorization": f"Bearer {token}",
+    }
     try:
         rep = requests.get(url, headers=headers)
         data = json.loads(rep.text)
@@ -305,17 +299,21 @@ def get_master_tags(tags_list):
         print("tags_list is not a list.")
         return _list
 
-    for tag in tags_list:
-        if tag_name in tag and tag != tag_name + "-latest":
-            _list.append(tag)
+    _list.extend(
+        tag
+        for tag in tags_list
+        if tag_name in tag and tag != f"{tag_name}-latest"
+    )
     return _list
 
 
 def get_config_digest(url, token):
-    headers = {'Content-type': "application/json",
-               "charset": "UTF-8",
-               "Accept": "application/vnd.docker.distribution.manifest.v2+json",
-               "Authorization": "Bearer %s" % token}
+    headers = {
+        'Content-type': "application/json",
+        "charset": "UTF-8",
+        "Accept": "application/vnd.docker.distribution.manifest.v2+json",
+        "Authorization": f"Bearer {token}",
+    }
     try:
         rep = requests.get(url, headers=headers)
         data = json.loads(rep.text)
@@ -355,7 +353,7 @@ def get_latest_tag(limit=200):
 
     if latest_tag == "":
         raise print("Can't find the latest image name")
-    print("The image name used is %s" % str(latest_tag))
+    print(f"The image name used is {str(latest_tag)}")
     return latest_tag
 
 
@@ -366,7 +364,7 @@ def get_image_tag():
         rep = requests.get(url, headers=headers)
         data = json.loads(rep.text)
         tag_name = data[0]["tags"][0]["name"]
-        print("[benchmark update] The image name used is %s" % str(tag_name))
+        print(f"[benchmark update] The image name used is {str(tag_name)}")
         return tag_name
     except:
         print("Can not get the tag list")
@@ -381,10 +379,11 @@ def dict_recursive_key(_dict, key=None):
             if isinstance(_dict[k], dict):
                 dict_recursive_key(_dict[k], key)
 
-            if key is None:
-                if _dict[k] is key:
-                    del _dict[k]
-            else:
-                if _dict[k] == key:
-                    del _dict[k]
+            if (
+                key is None
+                and _dict[k] is key
+                or key is not None
+                and _dict[k] == key
+            ):
+                del _dict[k]
     return _dict

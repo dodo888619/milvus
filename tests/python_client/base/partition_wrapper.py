@@ -45,7 +45,7 @@ class ApiPartitionWrapper:
 
     def drop(self, check_task=None, check_items=None, **kwargs):
         timeout = kwargs.get("timeout", TIMEOUT)
-        kwargs.update({"timeout": timeout})
+        kwargs["timeout"] = timeout
 
         func_name = sys._getframe().f_code.co_name
         res, succ = api_request([self.partition.drop], **kwargs)
@@ -66,7 +66,7 @@ class ApiPartitionWrapper:
 
     def release(self, check_task=None, check_items=None, **kwargs):
         timeout = kwargs.get("timeout", TIMEOUT)
-        kwargs.update({"timeout": timeout})
+        kwargs["timeout"] = timeout
 
         func_name = sys._getframe().f_code.co_name
         res, succ = api_request([self.partition.release], **kwargs)
@@ -77,7 +77,7 @@ class ApiPartitionWrapper:
 
     def flush(self, check_task=None, check_items=None, **kwargs):
         timeout = kwargs.get("timeout", TIMEOUT)
-        kwargs.update({"timeout": timeout})
+        kwargs["timeout"] = timeout
 
         func_name = sys._getframe().f_code.co_name
         res, succ = api_request([self.partition.flush], **kwargs)
@@ -88,7 +88,7 @@ class ApiPartitionWrapper:
 
     def insert(self, data, check_task=None, check_items=None, **kwargs):
         timeout = kwargs.get("timeout", TIMEOUT)
-        kwargs.update({"timeout": timeout})
+        kwargs["timeout"] = timeout
 
         func_name = sys._getframe().f_code.co_name
         res, succ = api_request([self.partition.insert, data], **kwargs)
@@ -100,7 +100,7 @@ class ApiPartitionWrapper:
     def search(self, data, anns_field, params, limit, expr=None, output_fields=None,
                check_task=None, check_items=None, **kwargs):
         timeout = kwargs.get("timeout", TIMEOUT)
-        kwargs.update({"timeout": timeout})
+        kwargs["timeout"] = timeout
 
         func_name = sys._getframe().f_code.co_name
         res, succ = api_request([self.partition.search, data, anns_field, params,
@@ -123,7 +123,7 @@ class ApiPartitionWrapper:
 
     def delete(self, expr, check_task=None, check_items=None, **kwargs):
         timeout = kwargs.get("timeout", TIMEOUT)
-        kwargs.update({"timeout": timeout})
+        kwargs["timeout"] = timeout
 
         func_name = sys._getframe().f_code.co_name
         res, succ = api_request([self.partition.delete, expr], **kwargs)
@@ -134,7 +134,7 @@ class ApiPartitionWrapper:
 
     def upsert(self, data, check_task=None, check_items=None, **kwargs):
         timeout = kwargs.get("timeout", TIMEOUT)
-        kwargs.update({"timeout": timeout})
+        kwargs["timeout"] = timeout
 
         func_name = sys._getframe().f_code.co_name
         res, succ = api_request([self.partition.upsert, data], **kwargs)

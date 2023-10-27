@@ -95,7 +95,7 @@ def create_collections_and_insert_data(prefix, flush=True, count=3000, collectio
     for index_name in all_index_types[:collection_cnt]:
         logger.info("\nCreate collection...")
         col_name = prefix + index_name
-        collection = Collection(name=col_name, schema=default_schema) 
+        collection = Collection(name=col_name, schema=default_schema)
         logger.info(f"collection name: {col_name}")
         logger.info(f"begin insert, count: {count} nb: {nb}")
         times = int(count // nb)
@@ -105,9 +105,9 @@ def create_collections_and_insert_data(prefix, flush=True, count=3000, collectio
             start_time = time.time()
             collection.insert(
                 [
-                    [i for i in range(nb * j, nb * j + nb)],
+                    list(range(nb * j, nb * j + nb)),
                     [float(random.randrange(-20, -10)) for _ in range(nb)],
-                    vectors[nb*j:nb*j+nb]
+                    vectors[nb * j : nb * j + nb],
                 ]
             )
             end_time = time.time()
@@ -118,7 +118,7 @@ def create_collections_and_insert_data(prefix, flush=True, count=3000, collectio
                 collection.num_entities
             if j == times - 3:
                 collection.compact()
-                
+
 
         logger.info(f"end insert, time: {total_time:.4f}")
         if flush:
@@ -139,10 +139,11 @@ def create_index_flat():
     # create index
     default_flat_index = {"index_type": "FLAT", "params": {}, "metric_type": "L2"}
     all_col_list = list_collections()
-    col_list = []
-    for col_name in all_col_list:
-        if "FLAT" in col_name and "task" in col_name and "IVF" not in col_name:
-            col_list.append(col_name)
+    col_list = [
+        col_name
+        for col_name in all_col_list
+        if "FLAT" in col_name and "task" in col_name and "IVF" not in col_name
+    ]
     logger.info("\nCreate index for FLAT...")
     for col_name in col_list:
         c = Collection(name=col_name)

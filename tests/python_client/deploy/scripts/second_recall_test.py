@@ -58,7 +58,7 @@ def search_test(host="127.0.0.1", index_type="HNSW"):
     nq = 10000
     topK = 100
     search_params = gen_search_param(index_type)
-    for i in range(3):
+    for _ in range(3):
         t0 = time.time()
         logger.info(f"\nSearch...")
         # define output_fields of search result
@@ -69,9 +69,7 @@ def search_test(host="127.0.0.1", index_type="HNSW"):
         logger.info(f"search cost  {t1 - t0:.4f} seconds")
         result_ids = []
         for hits in res:
-            result_id = []
-            for hit in hits:
-                result_id.append(hit.entity.get("int64"))
+            result_id = [hit.entity.get("int64") for hit in hits]
             result_ids.append(result_id)
 
         # calculate recall

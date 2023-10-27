@@ -17,7 +17,7 @@ from utils.util_pymilvus import get_latest_tag
 def e2e_milvus_parallel(process_num, host, c_name):
     """ e2e milvus """
     process_list = []
-    for i in range(process_num):
+    for _ in range(process_num):
         p = multiprocessing.Process(target=sc.e2e_milvus, args=(host, c_name))
         p.start()
         process_list.append(p)
@@ -59,7 +59,7 @@ class TestProxyScale:
         if mic.wait_for_healthy(release_name, constants.NAMESPACE, timeout=1800):
             host = mic.endpoint(release_name, constants.NAMESPACE).split(':')[0]
         else:
-            raise MilvusException(message=f'Milvus healthy timeout 1800s')
+            raise MilvusException(message='Milvus healthy timeout 1800s')
 
         try:
             c_name = cf.gen_unique_str("proxy_scale")

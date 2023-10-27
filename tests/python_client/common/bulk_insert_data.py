@@ -35,25 +35,18 @@ class DataErrorType:
 
 def gen_file_prefix(is_row_based=True, auto_id=True, prefix=""):
     if is_row_based:
-        if auto_id:
-            return f"{prefix}_row_auto"
-        else:
-            return f"{prefix}_row_cust"
+        return f"{prefix}_row_auto" if auto_id else f"{prefix}_row_cust"
     else:
-        if auto_id:
-            return f"{prefix}_col_auto"
-        else:
-            return f"{prefix}_col_cust"
+        return f"{prefix}_col_auto" if auto_id else f"{prefix}_col_cust"
 
 
 def entity_suffix(rows):
     if rows // 1000000 > 0:
-        suffix = f"{rows // 1000000}m"
+        return f"{rows // 1000000}m"
     elif rows // 1000 > 0:
-        suffix = f"{rows // 1000}k"
+        return f"{rows // 1000}k"
     else:
-        suffix = f"{rows}"
-    return suffix
+        return f"{rows}"
 
 
 def gen_float_vectors(nb, dim):
@@ -63,15 +56,11 @@ def gen_float_vectors(nb, dim):
 
 
 def gen_str_invalid_vectors(nb, dim):
-    vectors = [[str(gen_unique_str()) for _ in range(dim)] for _ in range(nb)]
-    return vectors
+    return [[str(gen_unique_str()) for _ in range(dim)] for _ in range(nb)]
 
 
 def gen_binary_vectors(nb, dim):
-    # binary: each int presents 8 dimension
-    # so if binary vector dimension is 16，use [x, y], which x and y could be any int between 0 to 255
-    vectors = [[random.randint(0, 255) for _ in range(dim)] for _ in range(nb)]
-    return vectors
+    return [[random.randint(0, 255) for _ in range(dim)] for _ in range(nb)]
 
 
 def gen_row_based_json_file(row_file, str_pk, data_fields, float_vect,

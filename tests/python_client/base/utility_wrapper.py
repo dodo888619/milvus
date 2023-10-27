@@ -51,18 +51,18 @@ class ApiUtilityWrapper:
         return res, check_result
 
     def get_bulk_insert_pending_list(self):
-        tasks = {}
-        for task in self.ut.list_bulk_insert_tasks():
-            if task.state == BulkInsertState.ImportPending:
-                tasks[task.task_id] = task
-        return tasks
+        return {
+            task.task_id: task
+            for task in self.ut.list_bulk_insert_tasks()
+            if task.state == BulkInsertState.ImportPending
+        }
 
     def get_bulk_insert_working_list(self):
-        tasks = {}
-        for task in self.ut.list_bulk_insert_tasks():
-            if task.state in [BulkInsertState.ImportStarted]:
-                tasks[task.task_id] = task
-        return tasks
+        return {
+            task.task_id: task
+            for task in self.ut.list_bulk_insert_tasks()
+            if task.state in [BulkInsertState.ImportStarted]
+        }
 
     def list_all_bulk_insert_tasks(self, limit=0):
         tasks, _ = self.list_bulk_insert_tasks(limit=limit)
@@ -102,10 +102,7 @@ class ApiUtilityWrapper:
             "in_progress": set()
         }
         tasks_state = {}
-        if timeout is not None:
-            task_timeout = timeout
-        else:
-            task_timeout = TIMEOUT
+        task_timeout = timeout if timeout is not None else TIMEOUT
         start = time.time()
         end = time.time()
         log.info(f"wait bulk load timeout is {task_timeout}")
@@ -118,30 +115,29 @@ class ApiUtilityWrapper:
             for task_id in task_ids:
                 if task_id in tasks_state_distribution["success"] or task_id in tasks_state_distribution["failed"]:
                     continue
-                else:
-                    state, _ = self.get_bulk_insert_state(task_id, task_timeout, using, **kwargs)
-                    tasks_state[task_id] = state
+                state, _ = self.get_bulk_insert_state(task_id, task_timeout, using, **kwargs)
+                tasks_state[task_id] = state
 
-                    if target_state == BulkInsertState.ImportPersisted:
-                        if state.state in [BulkInsertState.ImportPersisted, BulkInsertState.ImportCompleted]:
-                            if task_id in tasks_state_distribution["in_progress"]:
-                                tasks_state_distribution["in_progress"].remove(task_id)
-                            tasks_state_distribution["success"].add(task_id)
-                        elif state.state in [BulkInsertState.ImportPending, BulkInsertState.ImportStarted]:
-                            tasks_state_distribution["in_progress"].add(task_id)
-                        else:
-                            tasks_state_distribution["failed"].add(task_id)
+                if target_state == BulkInsertState.ImportPersisted:
+                    if state.state in [BulkInsertState.ImportPersisted, BulkInsertState.ImportCompleted]:
+                        if task_id in tasks_state_distribution["in_progress"]:
+                            tasks_state_distribution["in_progress"].remove(task_id)
+                        tasks_state_distribution["success"].add(task_id)
+                    elif state.state in [BulkInsertState.ImportPending, BulkInsertState.ImportStarted]:
+                        tasks_state_distribution["in_progress"].add(task_id)
+                    else:
+                        tasks_state_distribution["failed"].add(task_id)
 
-                    if target_state == BulkInsertState.ImportCompleted:
-                        if state.state in [BulkInsertState.ImportCompleted]:
-                            if task_id in tasks_state_distribution["in_progress"]:
-                                tasks_state_distribution["in_progress"].remove(task_id)
-                            tasks_state_distribution["success"].add(task_id)
-                        elif state.state in [BulkInsertState.ImportPending, BulkInsertState.ImportStarted,
-                                             BulkInsertState.ImportPersisted]:
-                            tasks_state_distribution["in_progress"].add(task_id)
-                        else:
-                            tasks_state_distribution["failed"].add(task_id)
+                if target_state == BulkInsertState.ImportCompleted:
+                    if state.state in [BulkInsertState.ImportCompleted]:
+                        if task_id in tasks_state_distribution["in_progress"]:
+                            tasks_state_distribution["in_progress"].remove(task_id)
+                        tasks_state_distribution["success"].add(task_id)
+                    elif state.state in [BulkInsertState.ImportPending, BulkInsertState.ImportStarted,
+                                         BulkInsertState.ImportPersisted]:
+                        tasks_state_distribution["in_progress"].add(task_id)
+                    else:
+                        tasks_state_distribution["failed"].add(task_id)
 
             end = time.time()
         pending_tasks = self.get_bulk_insert_pending_list()
@@ -156,13 +152,13 @@ class ApiUtilityWrapper:
             return False, tasks_state
 
     def wait_all_pending_tasks_finished(self):
-        task_states_map = {}
         all_tasks, _ = self.list_bulk_insert_tasks()
-        # log.info(f"all tasks: {all_tasks}")
-        for task in all_tasks:
-            if task.state in [BulkInsertState.ImportStarted, BulkInsertState.ImportPersisted]:
-                task_states_map[task.task_id] = task.state
-
+        task_states_map = {
+            task.task_id: task.state
+            for task in all_tasks
+            if task.state
+            in [BulkInsertState.ImportStarted, BulkInsertState.ImportPersisted]
+        }
         log.info(f"current tasks states: {task_states_map}")
         pending_tasks = self.get_bulk_insert_pending_list()
         working_tasks = self.get_bulk_insert_working_list()

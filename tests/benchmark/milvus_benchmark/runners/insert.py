@@ -42,16 +42,12 @@ class InsertRunner(BaseRunner):
                 "index_param": index_param
             }
             index_field_name = utils.get_default_field_name(vector_type)
-        flush = True
-        if "flush" in collection and collection["flush"] == "no":
-            flush = False
+        flush = "flush" not in collection or collection["flush"] != "no"
         self.init_metric(self.name, collection_info, index_info, None)
         case_metric = copy.deepcopy(self.metric)
         # set metric type as case
         case_metric.set_case_metric_type()
-        case_metrics = list()
-        case_params = list()
-        case_metrics.append(case_metric)
+        case_metrics = [case_metric]
         case_param = {
             "collection_name": collection_name,
             "data_type": data_type,
@@ -67,7 +63,7 @@ class InsertRunner(BaseRunner):
             "index_type": index_type,
             "index_param": index_param,
         }
-        case_params.append(case_param)
+        case_params = [case_param]
         return case_params, case_metrics
 
     def prepare(self, **case_param):
@@ -150,12 +146,10 @@ class BPInsertRunner(BaseRunner):
                 "index_param": index_param
             }
             index_field_name = utils.get_default_field_name(vector_type)
-        flush = True
-        if "flush" in collection and collection["flush"] == "no":
-            flush = False
-        case_metrics = list()
-        case_params = list()
-        
+        flush = "flush" not in collection or collection["flush"] != "no"
+        case_metrics = []
+        case_params = []
+
         for ni_per in ni_pers:
             collection_info = {
                 "dimension": dimension,

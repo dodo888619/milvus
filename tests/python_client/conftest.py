@@ -268,10 +268,9 @@ def pytest_configure(config):
 
 
 def pytest_runtest_setup(item):
-    tags = list()
+    tags = []
     for marker in item.iter_markers(name="tag"):
-        for tag in marker.args:
-            tags.append(tag)
+        tags.extend(iter(marker.args))
     if tags:
         cmd_tag = item.config.getoption("--tag")
         if cmd_tag != "all" and cmd_tag not in tags:
@@ -279,24 +278,25 @@ def pytest_runtest_setup(item):
 
 
 def pytest_runtestloop(session):
-    if session.config.getoption('--dry_run'):
-        total_num = 0
-        file_num = 0
-        tags_num = 0
-        res = {"total_num": total_num, "tags_num": tags_num}
-        for item in session.items:
-            print(item.nodeid)
-            if item.fspath.basename not in res:
-                res.update({item.fspath.basename: {"total": 1, "tags": 0}})
-            else:
-                res[item.fspath.basename]["total"] += 1
-            res["total_num"] += 1
-            for marker in item.own_markers:
-                if marker.name == "tags" and "0331" in marker.args:
-                    res["tags_num"] += 1
-                    res[item.fspath.basename]["tags"] += 1
-        print(res)
-        return True
+    if not session.config.getoption('--dry_run'):
+        return
+    total_num = 0
+    file_num = 0
+    tags_num = 0
+    res = {"total_num": total_num, "tags_num": tags_num}
+    for item in session.items:
+        print(item.nodeid)
+        if item.fspath.basename not in res:
+            res[item.fspath.basename] = {"total": 1, "tags": 0}
+        else:
+            res[item.fspath.basename]["total"] += 1
+        res["total_num"] += 1
+        for marker in item.own_markers:
+            if marker.name == "tags" and "0331" in marker.args:
+                res["tags_num"] += 1
+                res[item.fspath.basename]["tags"] += 1
+    print(res)
+    return True
 
 
 def check_server_connection(request):
@@ -308,7 +308,7 @@ def check_server_connection(request):
         try:
             socket.getaddrinfo(host, port, 0, 0, socket.IPPROTO_TCP)
         except Exception as e:
-            print("Socket connnet failed: %s" % str(e))
+            print(f"Socket connnet failed: {str(e)}")
             connected = False
     return connected
 
@@ -360,7 +360,6 @@ def connect(request):
     def fin():
         try:
             milvus.close()
-            pass
         except Exception as e:
             logging.getLogger().info(str(e))
 
@@ -391,8 +390,12 @@ def args(request):
     handler = request.config.getoption("--handler")
     if handler == "HTTP":
         port = http_port
-    args = {"ip": host, "port": port, "handler": handler, "service_name": service_name}
-    return args
+    return {
+        "ip": host,
+        "port": port,
+        "handler": handler,
+        "service_name": service_name,
+    }
 
 
 @pytest.fixture(scope="module")

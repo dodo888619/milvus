@@ -37,13 +37,13 @@ if __name__ == "__main__":
     client = docker.from_env()
     for image_name in set(images):
         file_name = (image_name.split(':')[0].replace("/", "-"))
-        f = gzip.open(save_path + "/" + file_name + '.tar.gz', 'wb')
+        f = gzip.open(f"{save_path}/{file_name}.tar.gz", 'wb')
         try:
             image = client.images.get(image_name)
             if image.id:
               print ("docker image \"" + image_name + "\" already exists.")
         except docker.errors.ImageNotFound:
-            print ("docker pull " + image_name + " ...")
+            print(f"docker pull {image_name} ...")
             image = client.images.pull(image_name)
         image_tar = image.save(named=True)
         f.writelines(image_tar)

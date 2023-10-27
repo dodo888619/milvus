@@ -18,7 +18,7 @@ if __name__ == '__main__':
     chaos_config = conf["chaos"]
     kind = chaos_config["kind"]
     spec = chaos_config["spec"]
-    metadata_name = config.NAMESPACE + "-" + kind.lower()
+    metadata_name = f"{config.NAMESPACE}-{kind.lower()}"
     metadata = {"name": metadata_name}
     chaos_mesh = kind_chaos_mapping[kind](config.DEFAULT_API_VERSION, kind, metadata, spec)
     experiment_params = chaos_mesh.gen_experiment_config()

@@ -42,7 +42,7 @@ class Base:
 
     def setup_method(self, method):
         log.info(("*" * 35) + " setup " + ("*" * 35))
-        log.info("[setup_method] Start setup test case %s." % method.__name__)
+        log.info(f"[setup_method] Start setup test case {method.__name__}.")
         self.connection_wrap = ApiConnectionsWrapper()
         self.utility_wrap = ApiUtilityWrapper()
         self.collection_wrap = ApiCollectionWrapper()
@@ -55,7 +55,7 @@ class Base:
 
     def teardown_method(self, method):
         log.info(("*" * 35) + " teardown " + ("*" * 35))
-        log.info("[teardown_method] Start teardown test case %s..." % method.__name__)
+        log.info(f"[teardown_method] Start teardown test case {method.__name__}...")
 
         try:
             """ Drop collection before disconnect """
@@ -128,24 +128,24 @@ class TestcaseBase(Base):
     def _connect(self, enable_high_level_api=False):
         """ Add a connection and create the connect """
         if enable_high_level_api:
-            if cf.param_info.param_uri:
-                uri = cf.param_info.param_uri
-            else:
-                uri = "http://" + cf.param_info.param_host + ":" + str(cf.param_info.param_port)
+            uri = (
+                cf.param_info.param_uri
+                if cf.param_info.param_uri
+                else f"http://{cf.param_info.param_host}:{str(cf.param_info.param_port)}"
+            )
             res, is_succ = self.connection_wrap.MilvusClient(uri=uri,
                                                              token=cf.param_info.param_token)
+        elif cf.param_info.param_user and cf.param_info.param_password:
+            res, is_succ = self.connection_wrap.connect(alias=DefaultConfig.DEFAULT_USING,
+                                                        host=cf.param_info.param_host,
+                                                        port=cf.param_info.param_port,
+                                                        user=cf.param_info.param_user,
+                                                        password=cf.param_info.param_password,
+                                                        secure=cf.param_info.param_secure)
         else:
-            if cf.param_info.param_user and cf.param_info.param_password:
-                res, is_succ = self.connection_wrap.connect(alias=DefaultConfig.DEFAULT_USING,
-                                                            host=cf.param_info.param_host,
-                                                            port=cf.param_info.param_port,
-                                                            user=cf.param_info.param_user,
-                                                            password=cf.param_info.param_password,
-                                                            secure=cf.param_info.param_secure)
-            else:
-                res, is_succ = self.connection_wrap.connect(alias=DefaultConfig.DEFAULT_USING,
-                                                            host=cf.param_info.param_host,
-                                                            port=cf.param_info.param_port)
+            res, is_succ = self.connection_wrap.connect(alias=DefaultConfig.DEFAULT_USING,
+                                                        host=cf.param_info.param_host,
+                                                        port=cf.param_info.param_port)
 
         return res
 
@@ -212,14 +212,14 @@ class TestcaseBase(Base):
                                                                    with_json=with_json)
         log.info("insert_data_general: collection creation")
         collection_w = self.init_collection_wrap(name=collection_name, schema=default_schema, **kwargs)
-        pre_entities = collection_w.num_entities
         if insert_data:
             collection_w, vectors, binary_raw_vectors, insert_ids, time_stamp = \
-                cf.insert_data(collection_w, nb, is_binary, is_all_data_type, auto_id=auto_id, dim=dim,
+                    cf.insert_data(collection_w, nb, is_binary, is_all_data_type, auto_id=auto_id, dim=dim,
                                enable_dynamic_field=enable_dynamic_field,
                                with_json=with_json)
             if is_flush:
                 collection_w.flush()
+                pre_entities = collection_w.num_entities
                 assert collection_w.num_entities == nb + pre_entities
 
         return collection_w, vectors, binary_raw_vectors, insert_ids, time_stamp

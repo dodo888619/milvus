@@ -36,12 +36,14 @@ def _check_one_file(completed_processes, filename):
     formatted = stdout
     if formatted != original:
         # Run the equivalent of diff -u
-        diff = list(difflib.unified_diff(
-            original.decode('utf8').splitlines(True),
-            formatted.decode('utf8').splitlines(True),
-            fromfile=filename,
-            tofile="{} (after clang format)".format(
-                filename)))
+        diff = list(
+            difflib.unified_diff(
+                original.decode('utf8').splitlines(True),
+                formatted.decode('utf8').splitlines(True),
+                fromfile=filename,
+                tofile=f"{filename} (after clang format)",
+            )
+        )
     else:
         diff = None
 
@@ -76,17 +78,14 @@ if __name__ == "__main__":
 
     exclude_globs = []
     if arguments.exclude_globs:
-        for line in open(arguments.exclude_globs):
-            exclude_globs.append(line.strip())
-
-    formatted_filenames = []
-    for path in lintutils.get_sources(arguments.source_dir, exclude_globs):
-        formatted_filenames.append(str(path))
-
+        exclude_globs.extend(line.strip() for line in open(arguments.exclude_globs))
+    formatted_filenames = [
+        str(path)
+        for path in lintutils.get_sources(arguments.source_dir, exclude_globs)
+    ]
     if arguments.fix:
         if not arguments.quiet:
-            print("\n".join(map(lambda x: "Formatting {}".format(x),
-                                formatted_filenames)))
+            print("\n".join(map(lambda x: f"Formatting {x}", formatted_filenames)))
 
         # Break clang-format invocations into chunks: each invocation formats
         # 16 files. Wait for all processes to complete
@@ -112,25 +111,23 @@ if __name__ == "__main__":
                 sys.exit(returncode)
 
         error = False
-        checker = partial(_check_one_file, {
-            filename: result
-            for filename, result in zip(formatted_filenames, results)
-        })
+        checker = partial(_check_one_file, dict(zip(formatted_filenames, results)))
         pool = mp.Pool()
         try:
             # check the output from each invocation of clang-format in parallel
             for filename, diff in pool.imap(checker, formatted_filenames):
                 if not arguments.quiet:
-                    print("Checking {}".format(filename))
+                    print(f"Checking {filename}")
                 if diff:
-                    print("{} had clang-format style issues".format(filename))
+                    print(f"{filename} had clang-format style issues")
                     # Print out the diff to stderr
                     error = True
                     # pad with a newline
                     print(file=sys.stderr)
-                    diff_out = []
-                    for diff_str in diff:
-                        diff_out.append(diff_str.encode('raw_unicode_escape').decode('ascii'))
+                    diff_out = [
+                        diff_str.encode('raw_unicode_escape').decode('ascii')
+                        for diff_str in diff
+                    ]
                     sys.stderr.writelines(diff_out)
         except Exception:
             error = True

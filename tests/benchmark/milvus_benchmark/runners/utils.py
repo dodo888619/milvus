@@ -25,14 +25,14 @@ WARM_NQ = 1
 DEFAULT_DIM = 512
 DEFAULT_METRIC_TYPE = "L2"
 
-RANDOM_SRC_DATA_DIR = config.RAW_DATA_DIR + 'random/'
-SIFT_SRC_DATA_DIR = config.RAW_DATA_DIR + 'sift1b/'
-DEEP_SRC_DATA_DIR = config.RAW_DATA_DIR + 'deep1b/'
-JACCARD_SRC_DATA_DIR = config.RAW_DATA_DIR + 'jaccard/'
-HAMMING_SRC_DATA_DIR = config.RAW_DATA_DIR + 'hamming/'
-STRUCTURE_SRC_DATA_DIR = config.RAW_DATA_DIR + 'structure/'
-BINARY_SRC_DATA_DIR = config.RAW_DATA_DIR + 'binary/'
-SIFT_SRC_GROUNDTRUTH_DATA_DIR = SIFT_SRC_DATA_DIR + 'gnd'
+RANDOM_SRC_DATA_DIR = f'{config.RAW_DATA_DIR}random/'
+SIFT_SRC_DATA_DIR = f'{config.RAW_DATA_DIR}sift1b/'
+DEEP_SRC_DATA_DIR = f'{config.RAW_DATA_DIR}deep1b/'
+JACCARD_SRC_DATA_DIR = f'{config.RAW_DATA_DIR}jaccard/'
+HAMMING_SRC_DATA_DIR = f'{config.RAW_DATA_DIR}hamming/'
+STRUCTURE_SRC_DATA_DIR = f'{config.RAW_DATA_DIR}structure/'
+BINARY_SRC_DATA_DIR = f'{config.RAW_DATA_DIR}binary/'
+SIFT_SRC_GROUNDTRUTH_DATA_DIR = f'{SIFT_SRC_DATA_DIR}gnd'
 
 DEFAULT_F_FIELD_NAME = 'float_vector'
 DEFAULT_B_FIELD_NAME = 'binary_vector'
@@ -72,7 +72,7 @@ def get_len_vectors_per_file(data_type, dimension):
         elif dimension == 16384:
             vectors_per_file = 10000
         else:
-            raise Exception("dimension: %s not supported" % str(dimension))
+            raise Exception(f"dimension: {str(dimension)} not supported")
     elif data_type == "sift":
         vectors_per_file = SIFT_VECTORS_PER_FILE
     elif data_type in ["binary"]:
@@ -80,7 +80,7 @@ def get_len_vectors_per_file(data_type, dimension):
     elif data_type == "local":
         vectors_per_file = SIFT_VECTORS_PER_FILE
     else:
-        raise Exception("data_type: %s not supported" % data_type)
+        raise Exception(f"data_type: {data_type} not supported")
     return vectors_per_file
 
 
@@ -93,16 +93,17 @@ def get_vectors_from_binary(nq, dimension, data_type):
     elif data_type == "random":
         file_name = RANDOM_SRC_DATA_DIR + 'query_%d.npy' % dimension
     elif data_type == "sift":
-        file_name = SIFT_SRC_DATA_DIR + 'query.npy'
+        file_name = f'{SIFT_SRC_DATA_DIR}query.npy'
     elif data_type == "deep":
-        file_name = DEEP_SRC_DATA_DIR + 'query.npy'
+        file_name = f'{DEEP_SRC_DATA_DIR}query.npy'
     elif data_type == "binary":
-        file_name = BINARY_SRC_DATA_DIR + 'query.npy'
+        file_name = f'{BINARY_SRC_DATA_DIR}query.npy'
     else:
-        raise Exception("There is no corresponding file for this data type %s." % str(data_type))
+        raise Exception(
+            f"There is no corresponding file for this data type {str(data_type)}."
+        )
     data = np.load(file_name)
-    vectors = data[0:nq].tolist()
-    return vectors
+    return data[:nq].tolist()
 
 
 def generate_vectors(nb, dim):
@@ -135,15 +136,14 @@ def metric_type_trans(metric_type):
     if metric_type in METRIC_MAP.keys():
         return METRIC_MAP[metric_type]
     else:
-        raise Exception("metric_type: %s not in METRIC_MAP" % metric_type)
+        raise Exception(f"metric_type: {metric_type} not in METRIC_MAP")
 
 
 def get_dataset(hdf5_file_path):
     """ Determine whether hdf5 file exists, and return the content of hdf5 file """
     if not os.path.exists(hdf5_file_path):
-        raise Exception("%s not existed" % hdf5_file_path)
-    dataset = h5py.File(hdf5_file_path)
-    return dataset
+        raise Exception(f"{hdf5_file_path} not existed")
+    return h5py.File(hdf5_file_path)
 
 
 def get_default_field_name(data_type=DataType.FLOAT_VECTOR):
@@ -170,21 +170,21 @@ def get_vector_type(data_type):
     elif data_type in ["binary"]:
         vector_type = DataType.BINARY_VECTOR
     else:
-        raise Exception("Data type: %s not defined" % data_type)
+        raise Exception(f"Data type: {data_type} not defined")
     return vector_type
 
 
 def get_vector_type_from_metric(metric_type):
-    if metric_type in ["hamming", "jaccard"]:
-        vector_type = DataType.BINARY_VECTOR
-    else:
-        vector_type = DataType.FLOAT_VECTOR
-    return vector_type
+    return (
+        DataType.BINARY_VECTOR
+        if metric_type in ["hamming", "jaccard"]
+        else DataType.FLOAT_VECTOR
+    )
 
 
 def normalize(metric_type, X):
     if metric_type == "ip":
-        logger.info("Set normalize for metric_type: %s" % metric_type)
+        logger.info(f"Set normalize for metric_type: {metric_type}")
         X = sklearn.preprocessing.normalize(X, axis=1, norm='l2')
         X = X.astype(np.float32)
     elif metric_type == "l2":
@@ -211,7 +211,7 @@ def generate_combinations(args):
                 flat.append([(k, v)])
         return [dict(x) for x in product(*flat)]
     else:
-        raise TypeError("No args handling exists for %s" % type(args).__name__)
+        raise TypeError(f"No args handling exists for {type(args).__name__}")
 
 
 def gen_file_name(idx, dimension, data_type):
@@ -227,7 +227,7 @@ def gen_file_name(idx, dimension, data_type):
         fname = JACCARD_SRC_DATA_DIR + fname
     elif data_type == "hamming":
         fname = HAMMING_SRC_DATA_DIR + fname
-    elif data_type == "sub" or data_type == "super":
+    elif data_type in ["sub", "super"]:
         fname = STRUCTURE_SRC_DATA_DIR + fname
     return fname
 
@@ -255,16 +255,15 @@ def get_recall_value(true_ids, result_ids):
 
 def get_ground_truth_ids(collection_size):
     fname = GROUNDTRUTH_MAP[str(collection_size)]
-    fname = SIFT_SRC_GROUNDTRUTH_DATA_DIR + "/" + fname
+    fname = f"{SIFT_SRC_GROUNDTRUTH_DATA_DIR}/{fname}"
     a = np.fromfile(fname, dtype='int32')
     d = a[0]
-    true_ids = a.reshape(-1, d + 1)[:, 1:].copy()
-    return true_ids
+    return a.reshape(-1, d + 1)[:, 1:].copy()
 
 
 def normalize(metric_type, X):
     if metric_type == "ip":
-        logger.info("Set normalize for metric_type: %s" % metric_type)
+        logger.info(f"Set normalize for metric_type: {metric_type}")
         X = sklearn.preprocessing.normalize(X, axis=1, norm='l2')
         X = X.astype(np.float32)
     elif metric_type == "l2":

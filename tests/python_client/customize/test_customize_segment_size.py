@@ -16,7 +16,7 @@ namespace = 'chaos-testing'
 
 
 def _install_milvus(seg_size):
-    release_name = f"mil-segsize-{seg_size}-" + cf.gen_digits_by_length(6)
+    release_name = f"mil-segsize-{seg_size}-{cf.gen_digits_by_length(6)}"
     cus_configs = {'spec.components.image': 'milvusdb/milvus:master-latest',
                    'metadata.namespace': namespace,
                    'metadata.name': release_name,
@@ -28,20 +28,16 @@ def _install_milvus(seg_size):
     milvus_op.install(cus_configs)
     healthy = milvus_op.wait_for_healthy(release_name, namespace, timeout=1200)
     log.info(f"milvus healthy: {healthy}")
-    if healthy:
-        endpoint = milvus_op.endpoint(release_name, namespace).split(':')
-        log.info(f"milvus endpoint: {endpoint}")
-        host = endpoint[0]
-        port = endpoint[1]
-        return release_name, host, port
-    else:
+    if not healthy:
         return release_name, None, None
+    endpoint = milvus_op.endpoint(release_name, namespace).split(':')
+    log.info(f"milvus endpoint: {endpoint}")
+    return release_name, endpoint[0], endpoint[1]
 
 
 class TestCustomizeSegmentSize:
 
     def teardown_method(self):
-        pass
         milvus_op = MilvusOperator()
         milvus_op.uninstall(self.release_name, namespace)
         connections.disconnect("default")

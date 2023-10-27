@@ -60,13 +60,10 @@ def get_chaos_yamls():
     if chaos_env is not None:
         if os.path.isdir(chaos_env):
             log.debug(f"chaos_env is a dir: {chaos_env}")
-            return glob.glob(chaos_env + "chaos_*.yaml")
+            return glob.glob(f"{chaos_env}chaos_*.yaml")
         elif os.path.isfile(chaos_env):
             log.debug(f"chaos_env is a file: {chaos_env}")
             return [chaos_env]
-        else:
-            # not a valid directory, return default
-            pass
     log.debug("not a valid directory or file, return default chaos config path")
     return glob.glob(constants.TESTS_CONFIG_LOCATION + constants.ALL_CHAOS_YAMLS)
 

@@ -27,7 +27,6 @@ class BaseRunner(object):
 
     def stop(self):
         logger.debug("Stop runner...")
-        pass
 
     @property
     def hostname(self):
@@ -72,8 +71,8 @@ class BaseRunner(object):
     def insert_core(self, milvus, info, start_id, vectors):
         # start insert vectors
         end_id = start_id + len(vectors)
-        logger.debug("Start id: %s, end id: %s" % (start_id, end_id))
-        ids = [k for k in range(start_id, end_id)]
+        logger.debug(f"Start id: {start_id}, end id: {end_id}")
+        ids = list(range(start_id, end_id))
         entities = utils.generate_entities(info, vectors, ids)
         ni_start_time = time.time()
         try:
@@ -110,9 +109,7 @@ class BaseRunner(object):
             while i < (size // vectors_per_file):
                 vectors = []
                 for j in range(vectors_per_file // ni):
-                    # vectors = src_vectors[j * ni:(j + 1) * ni]
-                    vectors = utils.generate_vectors(ni, dimension)
-                    if vectors:
+                    if vectors := utils.generate_vectors(ni, dimension):
                         start_id = i * vectors_per_file + j * ni
                         ni_time = self.insert_core(milvus, info, start_id, vectors)
                         total_time = total_time+ni_time
@@ -129,8 +126,7 @@ class BaseRunner(object):
                     data = np.load(file_name)
                     # logger.info("Load npy file: %s end" % file_name)
                     for j in range(vectors_per_file // ni):
-                        vectors = data[j * ni:(j + 1) * ni].tolist()
-                        if vectors:
+                        if vectors := data[j * ni : (j + 1) * ni].tolist():
                             start_id = i * vectors_per_file + j * ni
                             ni_time = self.insert_core(milvus, info, start_id, vectors)
                             total_time = total_time+ni_time

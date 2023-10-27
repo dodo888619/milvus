@@ -130,8 +130,7 @@ class TestChaos(TestChaosBase):
         replicas_info, _ = self.health_checkers[Op.search].c_wrap.get_replicas()
         for g in replicas_info.groups:
             group_list.append(list(g.group_nodes))
-            for shard in g.shards:
-                shard_leader_list.append(shard.shard_leader)
+            shard_leader_list.extend(shard.shard_leader for shard in g.shards)
         # keep only one group in healthy status, other groups will be unhealthy by injecting pod failure chaos,
         # In the effected groups, each group has one pod is in pod failure status 
         target_pod_list = []
@@ -149,7 +148,7 @@ class TestChaos(TestChaosBase):
                 target_nodes = list(set(g) & set(shard_leader_list))
             if failed_node_type == "non_shard_leader":
                 target_nodes = list(set(g) - set(shard_leader_list))
-            if len(target_nodes) == 0:
+            if not target_nodes:
                 log.info("there is no node satisfied, chose one randomly")
                 target_nodes = [random.choice(g)]
             for target_node in target_nodes:
@@ -161,7 +160,7 @@ class TestChaos(TestChaosBase):
         meta_name = chaos_config.get('metadata', None).get('name', None)
         chaos_config['spec']['selector']['pods']['chaos-testing'] = target_pod_list
         self._chaos_config = chaos_config  # cache the chaos config for tear down
-        
+
         log.info(f"chaos_config: {chaos_config}")
         # wait 20s
         sleep(constants.WAIT_PER_OP * 2)
@@ -234,7 +233,7 @@ class TestChaos(TestChaosBase):
         replicas_info, _ = self.health_checkers[Op.search].c_wrap.get_replicas()
         log.info(f"replicas_info for collection {self.health_checkers[Op.search].c_wrap.name}: {replicas_info}")
         replicas_info, _ = self.health_checkers[Op.query].c_wrap.get_replicas()
-        log.info(f"replicas_info for collection {self.health_checkers[Op.query].c_wrap.name}: {replicas_info}")         
+        log.info(f"replicas_info for collection {self.health_checkers[Op.query].c_wrap.name}: {replicas_info}")
         # assert statistic: all ops success again
         log.info("******3rd assert after chaos deleted: ")
         assert_statistic(self.health_checkers)

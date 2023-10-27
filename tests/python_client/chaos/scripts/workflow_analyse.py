@@ -16,8 +16,8 @@ def analysis_workflow(workflow_name, workflow_response):
     Used to count the number of successes and failures of jobs in the chaos test workflow, 
     so as to understand the robustness of different components(each job represents a component).
     """
-    workflow_id = [w["id"] for w in workflow_response.json()["workflows"] if workflow_name in w["name"]][0]    
-    runs_response = requests.request("GET", f"https://api.github.com/repos/milvus-io/milvus/actions/workflows/{workflow_id}/runs", headers=headers, data=payload, verify=False)    
+    workflow_id = [w["id"] for w in workflow_response.json()["workflows"] if workflow_name in w["name"]][0]
+    runs_response = requests.request("GET", f"https://api.github.com/repos/milvus-io/milvus/actions/workflows/{workflow_id}/runs", headers=headers, data=payload, verify=False)
     workflow_runs = [r["id"] for r in runs_response.json()["workflow_runs"] if r["status"] == "completed" and r["event"] == "schedule"]
     results = {}
     for run in workflow_runs:
@@ -28,7 +28,7 @@ def analysis_workflow(workflow_name, workflow_response):
                 results[r["name"]] = {"success": 0, "failure": 0}
             if r["status"] == "completed" and r["conclusion"] == "success":
                 results[r["name"]]["success"] += 1
-            elif r["status"] == "completed" and r["conclusion"] != "success":
+            elif r["status"] == "completed":
                 results[r["name"]]["failure"] += 1
     return results
 
